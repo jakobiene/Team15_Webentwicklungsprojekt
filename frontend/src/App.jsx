@@ -1,17 +1,12 @@
 import { useEffect } from "react";
+import Register from "../pages/Register";
 
 function App() {
-  useEffect(() => {
-    fetch("http://localhost:5000/api/test")
-      .then(res => res.json())
-      .then(data => console.log(data));
-  }, []);
+  return <Register />;
 
-  return (
-    <div className="container mt-5">
-      <h1>Check Console 👀</h1>
-    </div>
-  );
-}
+  useEffect(() => {
+    console.log("App component mounted");
+  }, []);}
+ 
 
 export default App;
