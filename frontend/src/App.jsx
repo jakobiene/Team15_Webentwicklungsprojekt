@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import Register from "../pages/Register";
+import Login from "../pages/Login";
 
 function App() {
   return <Register />;
 
-  useEffect(() => {
-    console.log("App component mounted");
-  }, []);}
+  }
  
 
 export default App;

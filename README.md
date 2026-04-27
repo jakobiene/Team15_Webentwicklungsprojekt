@@ -60,11 +60,15 @@ CREATE TABLE users (
 ```md
 ## 🔄 Auth Flow
 
-```mermaid
-flowchart TD
-    A[User] --> B[React Frontend]
-    B -->|POST /api/register| C[Express Backend]
-    C --> D[bcrypt Hash]
-    D --> E[MySQL Database]
-    E --> F[Response]
-    F --> B
+```txt
+[User]
+   ↓
+[React Frontend]
+   ↓  POST /api/register
+[Express Backend]
+   ↓
+[Password Hashing (bcrypt)]
+   ↓
+[MySQL Database]
+   ↓
+[Response → Frontend]
