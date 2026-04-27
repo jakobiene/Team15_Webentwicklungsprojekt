@@ -7,19 +7,28 @@ Webshop als Fullstack-Anwendung mit React (Frontend), Node.js/Express (Backend) 
 
 ## Setup
 ### 1. Repository klonen
+```
 git clone <repo-url>
 cd team15_webshop
+```
+
+### How to Install and start with React/Express:
+
+
 
 ### 2. Frontend starten
+```
 cd frontend
 npm install
 npm run dev
+```
 
 ### 3. Backend starten
+```
 cd backend
 npm install
 npm run dev
-
+```
 
 ### 4. DB-Setup (XAMPP,MAMP) MySQL
 
@@ -39,8 +48,23 @@ CREATE TABLE users (
 
 
 ### 4.1 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
-PORT=5000
-DB_HOST=localhost
-DB_USER=webadmin
-DB_PASSWORD=M993headEyes$!
-DB_NAME=webshop
+- PORT=5000
+- DB_HOST=localhost
+- DB_USER=webadmin
+- DB_PASSWORD=M993headEyes$!
+- DB_NAME=webshop
+
+
+### 5. Auth Flow bei Registrierung
+
+```md
+## 🔄 Auth Flow
+
+```mermaid
+flowchart TD
+    A[User] --> B[React Frontend]
+    B -->|POST /api/register| C[Express Backend]
+    C --> D[bcrypt Hash]
+    D --> E[MySQL Database]
+    E --> F[Response]
+    F --> B
