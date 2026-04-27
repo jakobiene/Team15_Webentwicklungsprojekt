@@ -1,4 +1,4 @@
-export async function registerUser(formData) {
+export async function registerUser(formData) { // funktion wie Repository in Kotlin 
   const response = await fetch("http://localhost:5000/api/register", { //backend-URL API-Endpunkt
     method: "POST",
     headers: {
