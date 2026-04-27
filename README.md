@@ -19,3 +19,28 @@ npm run dev
 cd backend
 npm install
 npm run dev
+
+
+### 4. DB-Setup (XAMPP,MAMP) MySQL
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  anrede VARCHAR(20),
+  vorname VARCHAR(100),
+  nachname VARCHAR(100),
+  adresse VARCHAR(255),
+  plz VARCHAR(20),
+  ort VARCHAR(100),
+  email VARCHAR(150) UNIQUE NOT NULL,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+### 4.1 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
+PORT=5000
+DB_HOST=localhost
+DB_USER=webadmin
+DB_PASSWORD=M993headEyes$!
+DB_NAME=webshop
