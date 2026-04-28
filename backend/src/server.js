@@ -41,21 +41,9 @@ app.post("/api/register", (req, res) => { //REGISTER-Endpoint, der die Registrie
 
 app.post("/api/register", async (req, res) => {
   try {
-    const {
-      anrede,
-      vorname,
-      nachname,
-      adresse,
-      plz,
-      ort,
-      email,
-      username,
-      password,
-    } = req.body;  //Destrukturierung der empfangenen Daten aus req.body, um die einzelnen Felder leichter verwenden zu können
+    const {anrede,vorname,nachname,adresse,plz,ort,email,username,password,} = req.body;  //Destrukturierung der empfangenen Daten aus req.body, um die einzelnen Felder leichter verwenden zu können
     //ist wie const anrede = req.body.anrede; const vorname = req.body.vorname; ...
-
     const passwordHash = await bcrypt.hash(password, 10); //hashing mit bcrypt 
-
     await pool.query(
       `INSERT INTO users 
       (anrede, vorname, nachname, adresse, plz, ort, email, username, password_hash)
@@ -68,4 +56,28 @@ app.post("/api/register", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Fehler bei der Registrierung" });
   }
+});
+
+// REQ = REQUEST
+// RES = RESPONSE
+app.post("/api/login", async (req, res) => {  
+  try
+    {const { email, password } = req.body;  //Destrukturierung bedeutet das die richtigen Werte aus req.body extrahiert werden.
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]); //Destructuring Assignment + SQL Injection Schutz + suche User mit Mail
+  
+
+    if (rows.length === 0) {
+      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+    }   
+    const user = rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+    }     
+    res.json({ message: "Login erfolgreich" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Login" });
+  }   
+
 });

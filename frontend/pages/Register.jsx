@@ -17,10 +17,10 @@ function Register() {
           </div>
 
           <div className="col-md-7 p-5">
-            {registered ? (
-              <RegisterSuccess />
+            {registered ? ( 
+              <RegisterSuccess /> 
             ) : (
-              <RegisterForm onSuccess={() => setRegistered(true)} />
+              <RegisterForm onSuccess={() => setRegistered(true)} /> 
             )}
           </div>
         </div>
