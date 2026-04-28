@@ -8,43 +8,106 @@ Dieser Endpunkt verarbeitet die Benutzer-Authentifizierung. Aus Sicherheitsgrün
 > **Security-Prinzip:** Der User erhält stets eine **generische Fehlermeldung**. Dadurch wird verschleiert, ob die E-Mail im System existiert oder lediglich das Passwort falsch war (Schutz vor *User Enumeration*).
 
 ---
-
+ 
 ## Authentication Flow & Security Logic
 
-Der Prozess ist in vier Hauptschritte unterteilt:
+Der Prozess ist in mehrere Hauptschritte unterteilt:
 
 ### 1. Daten-Extraktion (Destructuring)
-Zuerst werden mittels **Object Destructuring** nur die benötigten Felder aus dem Request extrahiert. Dies sorgt für eine klare Schnittstelle.
-```javascript
+
 const { email, password } = req.body;
-```
+
+---
 
 ### 2. Schutz vor SQL-Injections
-Die Datenbankabfrage erfolgt über **Prepared Statements** (Platzhalter `?`).
-- **Sicherheit:** Benutzereingaben werden strikt als Datenwert und niemals als ausführbarer SQL-Code behandelt.
-- **Destructuring Assignment:** Wir "entpacken" direkt das Resultat-Array (`[rows]`), um direkt auf die Datensätze zuzugreifen, statt das gesamte Metadaten-Paket der DB zu verarbeiten.
+
+const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+
+- Verwendung von Prepared Statements
+- Schutz vor SQL Injection
+- rows enthält die gefundenen Datensätze
+
+---
 
 ### 3. Schutz vor User Enumeration & Timing Attacks
-Bevor rechenintensive Kryptographie (Bcrypt) angewendet wird, erfolgt eine Validierung des Abfrageergebnisses.
+
+const user = rows[0];
+
+const fakeHash = "$2b$10$C6UzMDM.H6dfI/f/IKcEeO8WQyZz8Wc58e1z1s1Yd2xG6bX9d5f6K";
+const hashToCompare = user ? user.password_hash : fakeHash;
+
+const passwordMatch = await bcrypt.compare(password, hashToCompare);
+
 - **User Enumeration:** Durch identische Fehlermeldungen für "E-Mail falsch" und "Passwort falsch" verhindern wir, dass Angreifer durch systematisches Testen herausfinden können, welche E-Mail-Adressen im System existieren.
 - **Timing Attacks:** Ein Angreifer könnte theoretisch messen, wie lange der Server für eine Antwort braucht. Da das Hashen mit Bcrypt Zeit benötigt, würde eine sofortige Fehlermeldung bei falscher E-Mail den User verraten. 
 - **Lösung:** Im Code achten wir darauf, den Prozessfluss so zu gestalten, dass die Antwortzeiten für den Angreifer möglichst wenig Rückschlüsse auf die Existenz eines Kontos zulassen.
 
+---
 
-### 4. Existence Check (Early Return)
-Bevor rechenintensive Kryptographie (Bcrypt) angewendet wird, prüfen wir, ob das Ergebnis-Array leer ist.
-- Falls `rows.length === 0`, wird der Prozess sofort abgebrochen.
-- Dies spart Ressourcen und ist der erste Teil der Validierung.
+### 4. Zentrale Validierung
 
-### 5. Passwort-Verifizierung mit Bcrypt
-Da Passwörter niemals im Klartext gespeichert werden, nutzt die Anwendung `bcrypt.compare()`, um den User-Input sicher gegen den gespeicherten Hash zu prüfen.
+if (!user || !passwordMatch) {
+  return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+}
 
 ---
 
-## Implementierungs-Beispiel
+### 5. Passwort-Verifizierung mit Bcrypt
 
+Passwörter werden niemals im Klartext gespeichert.  
+bcrypt.compare prüft den User-Input gegen den gespeicherten Hash.
+
+---
+
+### 6. Sichere Response
+
+const { password_hash, ...safeUser } = user;
+
+---
+
+## Implementierungs-Beispiel (Secure)
+```javascript 
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const [rows] = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    const user = rows[0];
+
+    const fakeHash = "$2b$10$C6UzMDM.H6dfI/f/IKcEeO8WQyZz8Wc58e1z1s1Yd2xG6bX9d5f6K";
+    const hashToCompare = user ? user.password_hash : fakeHash;
+
+    const passwordMatch = await bcrypt.compare(password, hashToCompare);
+
+    if (!user || !passwordMatch) {
+      return res.status(401).json({
+        message: "Ungültige E-Mail oder Passwort"
+      });
+    }
+
+    const { password_hash, ...safeUser } = user;
+
+    res.json({
+      message: "Login erfolgreich",
+      user: safeUser
+    });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ message: "Fehler beim Login" });
+  }
+});
+```
+
+---
+
+## Implementierungs-Beispiel (KI-Generiert einfach aber "not Secure")
 ```javascript
-app.post("/api/login", async (req, res) => {   // REQ-> REQUEST / RES -> REPONSE  
+app.post("/api/login", async (req, res) => {   //req = HTTP Request,  res = HTTP Response
   try {
     // 1. Destrukturierung der Eingabewerte
     const { email, password } = req.body;  
@@ -85,8 +148,12 @@ app.post("/api/login", async (req, res) => {   // REQ-> REQUEST / RES -> REPONSE
 });
 ```
 
-### Verwendete Konzepte
+
+## Verwendete Konzepte
+
 *   **Destructuring Assignment:** Sauberer Code durch direktes Entpacken von Objekten und Arrays.
 *   **Bcrypt:** Sicherer Industriestandard für Passwort-Hashing.
 *   **Async/Await:** Ermöglicht eine flache, lesbare Struktur bei asynchronen Operationen.
 *   **Security by Design:** Diese Implementierung folgt dem Prinzip **"Security by Design"**. Durch die Kombination aus **Prepared Statements** (gegen SQL-Injection), **Bcrypt** (gegen Datenleaks von Passwörtern) und dem Schutz vor **User Enumeration** (gegen gezieltes Ausspähen von Nutzerdaten) wird eine robuste Barriere gegen gängige Web-Angriffe geschaffen. Die Verwendung von **Object Destructuring** sorgt dabei zusätzlich dafür, dass der Code wartbar und übersichtlich bleibt.
+
+Diese Implementierung kombiniert mehrere Sicherheitsmechanismen, um typische Web-Angriffe wie SQL Injection, User Enumeration und Timing Attacks zu verhindern.

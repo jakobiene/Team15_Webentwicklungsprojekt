@@ -62,22 +62,24 @@ app.post("/api/register", async (req, res) => {
 // RES = RESPONSE
 app.post("/api/login", async (req, res) => {  
   try
-    {const { email, password } = req.body;  //Destrukturierung bedeutet das die richtigen Werte aus req.body extrahiert werden.
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]); //Destructuring Assignment + SQL Injection Schutz + suche User mit Mail
-  
+    {const { email, password } = req.body;  
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]); 
 
-    if (rows.length === 0) {
-      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
-    }   
+    const fakeHash = bcrypt.hash("fakepassword", 10); 
     const user = rows[0];
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
-    }     
-    res.json({ message: "Login erfolgreich" });
-  } catch (error) {
+    const hashToCompare = user ? user.password_hash : fakeHash;
+    const passwordMatch = await bcrypt.compare(password, hashToCompare); 
+
+      if (!user || !passwordMatch) {
+      return res.status(401).json({
+        message: "Ungültige E-Mail oder Passwort"
+      });
+    }
+      const { password_hash, ...safeUser } = user;
+
+    res.json({message: "Login erfolgreich", user: safeUser});
+    } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Fehler beim Login" });
-  }   
+    res.status(500).json({ message: "Fehler beim Login" });}
 
 });
