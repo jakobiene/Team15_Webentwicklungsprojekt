@@ -1,4 +1,4 @@
-# 🖥️ Code Doku Backend
+#  Code Doku Backend
 
 ## Datei: `server.js`
 
@@ -9,7 +9,7 @@ Dieser Endpunkt verarbeitet die Benutzer-Authentifizierung. Aus Sicherheitsgrün
 
 ---
 
-## 🔒 Authentication Flow & Security Logic
+## Authentication Flow & Security Logic
 
 Der Prozess ist in vier Hauptschritte unterteilt:
 
@@ -41,7 +41,7 @@ Da Passwörter niemals im Klartext gespeichert werden, nutzt die Anwendung `bcry
 
 ---
 
-## 📝 Implementierungs-Beispiel
+## Implementierungs-Beispiel
 
 ```javascript
 app.post("/api/login", async (req, res) => {   // REQ-> REQUEST / RES -> REPONSE  
