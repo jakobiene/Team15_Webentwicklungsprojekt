@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Register from "../pages/Register";
 import RegisterSuccess from "../components/RegisterSuccess";
 import Login from "../pages/Login";
+import LoginSuccess from "../components/LoginSuccess";
 
 function App() {
   return(
