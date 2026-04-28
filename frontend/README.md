@@ -15,14 +15,15 @@ Der Prozess ist in mehrere Hauptschritte unterteilt:
 
 ### 1. Daten-Extraktion (Destructuring)
 
+```javascript
 const { email, password } = req.body;
-
+```
 ---
 
 ### 2. Schutz vor SQL-Injections
-
+```javascript
 const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-
+```
 - Verwendung von Prepared Statements
 - Schutz vor SQL Injection
 - rows enthält die gefundenen Datensätze
@@ -30,13 +31,14 @@ const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 ---
 
 ### 3. Schutz vor User Enumeration & Timing Attacks
-
+```javascript
 const user = rows[0];
 
 const fakeHash = "$2b$10$C6UzMDM.H6dfI/f/IKcEeO8WQyZz8Wc58e1z1s1Yd2xG6bX9d5f6K";
 const hashToCompare = user ? user.password_hash : fakeHash;
 
 const passwordMatch = await bcrypt.compare(password, hashToCompare);
+```
 
 - **User Enumeration:** Durch identische Fehlermeldungen für "E-Mail falsch" und "Passwort falsch" verhindern wir, dass Angreifer durch systematisches Testen herausfinden können, welche E-Mail-Adressen im System existieren.
 - **Timing Attacks:** Ein Angreifer könnte theoretisch messen, wie lange der Server für eine Antwort braucht. Da das Hashen mit Bcrypt Zeit benötigt, würde eine sofortige Fehlermeldung bei falscher E-Mail den User verraten. 
@@ -45,11 +47,11 @@ const passwordMatch = await bcrypt.compare(password, hashToCompare);
 ---
 
 ### 4. Zentrale Validierung
-
+```javascript
 if (!user || !passwordMatch) {
   return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
 }
-
+```
 ---
 
 ### 5. Passwort-Verifizierung mit Bcrypt
@@ -60,9 +62,9 @@ bcrypt.compare prüft den User-Input gegen den gespeicherten Hash.
 ---
 
 ### 6. Sichere Response
-
+```javascript
 const { password_hash, ...safeUser } = user;
-
+```
 ---
 
 ## Implementierungs-Beispiel (Secure)
