@@ -13,9 +13,6 @@ const PORT = process.env.PORT || 5000; //
 app.use(cors()); // erlaubt Frontend, auf die API zuzugreifen
 app.use(express.json()); // ermöglicht das Parsen von JSON-Daten im Request-Body -> req.body nutzt diesen Middleware, um die Daten zu verarbeiten, die vom Frontend gesendet werden (z.B. bei der Registrierung eines Benutzers)
 
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Backend läuft" });
-});
 
 app.listen(PORT, () => {
   console.log(`Backend läuft auf http://localhost:${PORT}`);
@@ -27,10 +24,11 @@ function validateRegisterData(data) {
   if (!anrede || !vorname || !nachname || !adresse || !plz || !ort || !email || !username || !password) {
     throw new Error("Alle Felder müssen ausgefüllt werden");
   }
-  const validatedEmail = validateEmail(email);
+  const validatedEmail = validateEmail(email); // mail wird validiert und wenn false dann -> true und geht in if.
   if (!validatedEmail) {
     throw new Error("Ungültige E-Mail-Adresse");
   }
+
   if (password.length < 8) {
     throw new Error("Passwort muss mindestens 8 Zeichen lang sein");
   }
@@ -44,22 +42,13 @@ return null;
 
 }
 
-function validateLoginData(data) {
-  const { email, password } = data;
-  const validated = validateEmail(email);
-  if (!validated) {
-    return "Ungültige E-Mail-Adresse";
-  }
-
-} 
-
 function validateEmail(email) {
 if (typeof email !== "string") return false;
 email = email.trim();
 if (email === "") return false;
 return validator.isEmail(email);
 }
- 
+
 
 app.post("/api/register", async (req, res) => {
   try {
@@ -74,10 +63,14 @@ app.post("/api/register", async (req, res) => {
       (anrede, vorname, nachname, adresse, plz, ort, email, username, password_hash)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,  
       [anrede, vorname, nachname, adresse, plz, ort, email, username, passwordHash]
-    );
+    ); 
 
-    res.status(201).json({ message: "Registrierung erfolgreich" });
+    return res.status(201).json({ message: "Registrierung erfolgreich" });
+
   } catch (error) {
+    if(error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "E-Mail oder Benutzername bereits vergeben" });
+    }
     console.error(error);
     res.status(500).json({ message: "Fehler bei der Registrierung" });
   }
@@ -85,16 +78,17 @@ app.post("/api/register", async (req, res) => {
 
 // REQ = REQUEST
 // RES = RESPONSE
+const fakeHash = await bcrypt.hash("fakepassword", 10); //fake-hash für timing attack prevention (außerhalb vom Endpoint)
 app.post("/api/login", async (req, res) => {  
   try
     {const { email, password } = req.body;
-    const validationError = validateLoginData(req.body);
-    if (validationError) {
-      return res.status(400).json({ message: validationError });
+    const validationError = validateEmail(req.body.email);
+    if (!validationError) {
+      return res.status(400).json({ message: "Ungültige E-Mail" });
     }
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);  
 
-    const fakeHash = bcrypt.hash("fakepassword", 10); 
+ 
     const user = rows[0];
     const hashToCompare = user ? user.password_hash : fakeHash;
     const passwordMatch = await bcrypt.compare(password, hashToCompare); 
