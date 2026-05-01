@@ -69,39 +69,33 @@ const { password_hash, ...safeUser } = user;
 
 ## Implementierungs-Beispiel (Secure)
 ```javascript 
-app.post("/api/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+const fakeHash = await bcrypt.hash("fakepassword", 10); //fake-hash für timing attack prevention (außerhalb vom Endpoint)
+app.post("/api/login", async (req, res) => {  
+  try
+    {const { email, password } = req.body;
+    const validationError = validateEmail(req.body.email);
+    if (!validationError) {
+      return res.status(400).json({ message: "Ungültige E-Mail" });
+    }
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);  
 
-    const [rows] = await pool.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email]
-    );
-
+ 
     const user = rows[0];
-
-    const fakeHash = "$2b$10$C6UzMDM.H6dfI/f/IKcEeO8WQyZz8Wc58e1z1s1Yd2xG6bX9d5f6K";
     const hashToCompare = user ? user.password_hash : fakeHash;
+    const passwordMatch = await bcrypt.compare(password, hashToCompare); 
 
-    const passwordMatch = await bcrypt.compare(password, hashToCompare);
-
-    if (!user || !passwordMatch) {
+      if (!user || !passwordMatch) {
       return res.status(401).json({
         message: "Ungültige E-Mail oder Passwort"
       });
     }
+      const { password_hash, ...safeUser } = user;
 
-    const { password_hash, ...safeUser } = user;
+    res.json({message: "Login erfolgreich", user: safeUser});
+    } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Login" });}
 
-    res.json({
-      message: "Login erfolgreich",
-      user: safeUser
-    });
-
-  } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ message: "Fehler beim Login" });
-  }
 });
 ```
 

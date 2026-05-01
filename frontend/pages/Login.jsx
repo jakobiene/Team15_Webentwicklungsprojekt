@@ -11,11 +11,8 @@ function Login() {
           <div className="col-md-5 d-none d-md-flex flex-column justify-content-center p-5 bg-dark text-white">
             <h1 className="fw-bold">Nil</h1>
             <p className="mt-3 text-white-50">
-              Melde dich an und starte mit deinem Einkauf.
-            </p>
-          </div>
-
-          <div className="col-md-7 p-5">
+              Melde dich an und starte mit deinem Einkauf.</p></div>
+              <div className="col-md-7 p-5">
             <LoginForm onSuccess={() => navigate("/dashboard")} />
           </div>
         </div>
