@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Register from "../pages/Register";
 import RegisterSuccess from "../components/RegisterSuccess";
 import Login from "../pages/Login";
-import LoginSuccess from "../components/LoginSuccess";
+import Dashboard from "../pages/Dashboard";
 
 function App() {
   return(
@@ -11,6 +11,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/register/success" element={<RegisterSuccess />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );
 

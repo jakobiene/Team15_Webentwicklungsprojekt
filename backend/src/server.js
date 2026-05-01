@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt"; //PW Hashing 
+import validator from "validator"; //E-Mail-Validierung
 import { pool } from "../database/db.js" // Importieren des Verbindungs-Pools aus der db.js, um später in den API-Endpunkten auf die Datenbank zugreifen zu können
 
 dotenv.config(); // lädt die Umgebungsvariablen aus der .env-Datei, damit wir z.B. den PORT flexibel konfigurieren können
@@ -20,34 +21,58 @@ app.listen(PORT, () => {
   console.log(`Backend läuft auf http://localhost:${PORT}`);
 });
 
-/* <--- Einfacher Test-Endpoint, um zu überprüfen, ob das Backend korrekt läuft und Anfragen empfängt.---->
+ 
+function validateRegisterData(data) {
+  const { anrede, vorname,nachname, adresse,plz, ort, email,username,password } = data;
+  if (!anrede || !vorname || !nachname || !adresse || !plz || !ort || !email || !username || !password) {
+    throw new Error("Alle Felder müssen ausgefüllt werden");
+  }
+  const validatedEmail = validateEmail(email);
+  if (!validatedEmail) {
+    throw new Error("Ungültige E-Mail-Adresse");
+  }
+  if (password.length < 8) {
+    throw new Error("Passwort muss mindestens 8 Zeichen lang sein");
+  }
+  if (!/\d/.test(password) && !/[!@#$%^&*]/.test(password) && !/[A-Z]/.test(password) ) {
+    throw new Error("Passwort muss mindestens eine Zahl, ein Sonderzeichen und einen Großbuchstaben enthalten");
+  }  
+  if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+    return "Ungültiger Benutzername";
+  }
+return null;
 
-app.post("/api/register", (req, res) => { //REGISTER-Endpoint, der die Registrierungsdaten vom Frontend empfängt
-  const userData = req.body; // Zugriff auf die gesendeten Daten über req.body, da wir express.json() Middleware verwenden
+}
 
-  console.log("Register data received:", userData); //
-
-  // einfache Validierung
-  if (!userData.email || !userData.password) {
-    return res.status(400).json({
-      message: "E-Mail und Passwort sind erforderlich",
-    });
+function validateLoginData(data) {
+  const { email, password } = data;
+  const validated = validateEmail(email);
+  if (!validated) {
+    return "Ungültige E-Mail-Adresse";
   }
 
-  res.status(201).json({
-    message: "Registrierung erfolgreich",
-  });
-});  */
+} 
+
+function validateEmail(email) {
+if (typeof email !== "string") return false;
+email = email.trim();
+if (email === "") return false;
+return validator.isEmail(email);
+}
+ 
 
 app.post("/api/register", async (req, res) => {
   try {
-    const {anrede,vorname,nachname,adresse,plz,ort,email,username,password,} = req.body;  //Destrukturierung der empfangenen Daten aus req.body, um die einzelnen Felder leichter verwenden zu können
-    //ist wie const anrede = req.body.anrede; const vorname = req.body.vorname; ...
+  const {anrede,vorname,nachname,adresse,plz,ort,email,username,password,} = req.body;  //Destrukturierung der empfangenen Daten aus req.body, um die einzelnen Felder leichter verwenden zu können
+   const validationError = validateRegisterData(req.body)
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
     const passwordHash = await bcrypt.hash(password, 10); //hashing mit bcrypt 
     await pool.query(
       `INSERT INTO users 
       (anrede, vorname, nachname, adresse, plz, ort, email, username, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,  //anti SQL Injection, da die Werte als Parameter übergeben werden und nicht direkt in die SQL-Abfrage eingebettet werden
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,  
       [anrede, vorname, nachname, adresse, plz, ort, email, username, passwordHash]
     );
 
@@ -62,8 +87,12 @@ app.post("/api/register", async (req, res) => {
 // RES = RESPONSE
 app.post("/api/login", async (req, res) => {  
   try
-    {const { email, password } = req.body;  
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]); 
+    {const { email, password } = req.body;
+    const validationError = validateLoginData(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);  
 
     const fakeHash = bcrypt.hash("fakepassword", 10); 
     const user = rows[0];

@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
-import LoginSuccess from "../components/LoginSuccess";
 
 function Login() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   return (
     <div className="min-vh-100 d-flex align-items-center bg-light">
@@ -13,21 +11,17 @@ function Login() {
           <div className="col-md-5 d-none d-md-flex flex-column justify-content-center p-5 bg-dark text-white">
             <h1 className="fw-bold">Nil</h1>
             <p className="mt-3 text-white-50">
-              Melde dich an und starte mit deinem Einkauf. </p>
-                 </div>    
-            <div className="col-md-7 p-5">
-                {loggedIn ? (
-                    <LoginSuccess user={user} />
-                ) : (
-                    <LoginForm onSuccess={(userData) => {
-                        setUser(userData);
-                        setLoggedIn(true);
-                    }
-                    } />
-                )}
-            </div>              
+              Melde dich an und starte mit deinem Einkauf.
+            </p>
+          </div>
+
+          <div className="col-md-7 p-5">
+            <LoginForm onSuccess={() => navigate("/dashboard")} />
+          </div>
         </div>
       </div>
     </div>
   );
-}   
+}
+
+export default Login;
