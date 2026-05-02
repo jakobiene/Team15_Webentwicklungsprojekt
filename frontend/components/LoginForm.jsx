@@ -15,7 +15,6 @@ function LoginForm({ onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     try {
       await loginUser(formData);
       setError("");
@@ -35,15 +34,7 @@ function LoginForm({ onSuccess }) {
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">E-Mail</label>
-          <input
-            type="email"
-            className="form-control"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
+          <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange}required/></div>
 
          <div className="mb-3">
           <label className="form-label">Passwort</label>
@@ -53,10 +44,7 @@ function LoginForm({ onSuccess }) {
           <input type="checkbox" className="form-check-input" id="rememberMe" name="rememberMe" checked={formData.rememberMe} onChange={handleChange}/>
           <label className="form-check-label" htmlFor="rememberMe">Login merken</label>
         </div>
-
-        <button className="btn btn-dark w-100 py-2 mt-2">
-          Anmelden
-        </button>
+        <button className="btn btn-dark w-100 py-2 mt-2"> Anmelden</button>
       </form>
     </>
   );

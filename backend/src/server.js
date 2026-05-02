@@ -10,7 +10,13 @@ dotenv.config(); // lädt die Umgebungsvariablen aus der .env-Datei, damit wir z
 const app = express(); // Erstellt eine neue Express-Anwendung
 const PORT = process.env.PORT || 5000; //
 
-app.use(cors()); // erlaubt Frontend, auf die API zuzugreifen
+app.use(cors(
+  {
+  origin: "http://localhost:5173",
+  credentials: true
+  }
+)); // erlaubt Frontend, auf die API zuzugreifen
+
 app.use(express.json()); // ermöglicht das Parsen von JSON-Daten im Request-Body -> req.body nutzt diesen Middleware, um die Daten zu verarbeiten, die vom Frontend gesendet werden (z.B. bei der Registrierung eines Benutzers)
 
 
@@ -81,7 +87,7 @@ app.post("/api/register", async (req, res) => {
 const fakeHash = await bcrypt.hash("fakepassword", 10); //fake-hash für timing attack prevention (außerhalb vom Endpoint)
 app.post("/api/login", async (req, res) => {  
   try
-    {const { email, password } = req.body;
+    {const { email, password, rememberMe } = req.body;
     const validationError = validateEmail(req.body.email);
     if (!validationError) {
       return res.status(400).json({ message: "Ungültige E-Mail" });
@@ -98,9 +104,19 @@ app.post("/api/login", async (req, res) => {
         message: "Ungültige E-Mail oder Passwort"
       });
     }
+
+    if(rememberMe) {
+    res.cookie("sessionId",sessionId,{
+      httpOnly: true,
+      secure: false, // in Prod->true(https)
+      sameSite: "lax", //kein CSRF möglich (Cross Site Request Forgery) 
+      maxAg: 1000 * 60 * 60 * 24 * 30, // 30Tage
+    } )}
+
       const { password_hash, ...safeUser } = user;
 
-    res.json({message: "Login erfolgreich", user: safeUser});
+    
+    return res.status(200).json({ message: "Login erfolgreich", user: safeUser });
     } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Fehler beim Login" });}

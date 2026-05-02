@@ -24,10 +24,12 @@ export async function loginUser(credentials) {
         headers: {
             "Content-Type": "application/json",
         },
+        credentials: "inlucde", //cookies
         body: JSON.stringify(credentials),
     });        
+    const data = await response.json();
     if (!response.ok) {
-        throw new Error("Login fehlgeschlagen");
+        throw new Error(data.message || "Login fehlgeschlagen");
     }   
     return response.json();
 }       
