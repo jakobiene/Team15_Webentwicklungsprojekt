@@ -132,6 +132,22 @@ app.post("/api/login", async (req, res) => {
 });
 
 
+app.post("/api/logout", (req, res) => {
+  if (!req.session.user) {
+    return res.status(200).json({ message: "Bereits ausgeloggt" });
+  }
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Fehler beim Logout" });
+    }
+
+    res.clearCookie("connect.sid");
+    return res.status(200).json({ message: "Logout erfolgreich" });
+  });
+});
+
 app.get("/api/me", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ user: null });

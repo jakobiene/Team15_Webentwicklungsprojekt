@@ -42,6 +42,15 @@ export async function loginUser(credentials) {
 
 //LOGOUT
 
+export async function logoutUser() {
+    const response = await fetch
+    ("http://localhost:5000/api/logout", {method: "POST", credentials: "include",}); 
+    if(!response.ok){
+        throw new Error("Logout fehlgeschalgen"); 
+    }
+    return response.json();
+
+}
 
 
 
@@ -54,6 +63,6 @@ export async function getCurrentUser() {
     if(!response.ok) {return null;}
     const data = await response.json();
     return data.user;
-    
+
 }
 
