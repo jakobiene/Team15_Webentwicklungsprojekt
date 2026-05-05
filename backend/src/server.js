@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt"; //PW Hashing 
 import validator from "validator"; //E-Mail-Validierung
 import { pool } from "../database/db.js" // Importieren des Verbindungs-Pools aus der db.js, um später in den API-Endpunkten auf die Datenbank zugreifen zu können
+import session from "express-session";  // Sesh Mgmt für effizientes coding
 
 dotenv.config(); // lädt die Umgebungsvariablen aus der .env-Datei, damit wir z.B. den PORT flexibel konfigurieren können
 
@@ -19,6 +20,17 @@ app.use(cors(
 
 app.use(express.json()); // ermöglicht das Parsen von JSON-Daten im Request-Body -> req.body nutzt diesen Middleware, um die Daten zu verarbeiten, die vom Frontend gesendet werden (z.B. bei der Registrierung eines Benutzers)
 
+app.use(session({
+secret: process.env.SESSION_SECRET || "dev-secret", 
+resave: false,
+saveUninitialized: false,
+cookie: {
+  httpOnly: true,
+  secure: false,
+  sameSite: "lax",
+
+},
+}));
 
 app.listen(PORT, () => {
   console.log(`Backend läuft auf http://localhost:${PORT}`);
@@ -105,20 +117,25 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
-    if(rememberMe) {
-    res.cookie("sessionId",sessionId,{
-      httpOnly: true,
-      secure: false, // in Prod->true(https)
-      sameSite: "lax", //kein CSRF möglich (Cross Site Request Forgery) 
-      maxAge: 1000 * 60 * 60 * 24 * 30, // 30Tage
-    } )}
-
       const { password_hash, ...safeUser } = user;
-
+        req.session.user = safeUser; 
+       if(rememberMe){
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; 
+        }else {
+        req.session.cookie.maxAge = null;}  
     
     return res.status(200).json({ message: "Login erfolgreich", user: safeUser });
     } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Fehler beim Login" });}
 
+});
+
+
+app.get("/api/me", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ user: null });
+  }
+
+  return res.json({ user: req.session.user });
 });
