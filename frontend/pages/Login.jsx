@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 
-function Login() {
+function Login({ onLogin }) {
   const navigate = useNavigate();
 
   return (
@@ -13,7 +13,7 @@ function Login() {
             <p className="mt-3 text-white-50">
               Melde dich an und starte mit deinem Einkauf.</p></div>
               <div className="col-md-7 p-5">
-            <LoginForm onSuccess={() => navigate("/dashboard")} />
+            <LoginForm onSuccess={(data) => {onLogin(data.user); navigate("/");}} />
           </div>
         </div>
       </div>

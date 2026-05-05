@@ -110,7 +110,7 @@ app.post("/api/login", async (req, res) => {
       httpOnly: true,
       secure: false, // in Prod->true(https)
       sameSite: "lax", //kein CSRF möglich (Cross Site Request Forgery) 
-      maxAg: 1000 * 60 * 60 * 24 * 30, // 30Tage
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30Tage
     } )}
 
       const { password_hash, ...safeUser } = user;

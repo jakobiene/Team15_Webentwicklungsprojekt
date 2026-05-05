@@ -16,9 +16,9 @@ function LoginForm({ onSuccess }) {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await loginUser(formData);
+      const data = await loginUser(formData);
       setError("");
-      onSuccess();
+      onSuccess(data);
     } catch (err) {
       setError("Login fehlgeschlagen");
     }
