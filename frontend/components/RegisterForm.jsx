@@ -74,14 +74,8 @@ function RegisterForm({ onSuccess }) {
           {fields.map((field) => (
             <div className="col-md-6 mb-3" key={field.name}>
               <label className="form-label">{field.label}</label>
-              <input
-                type={field.type}
-                className="form-control"
-                name={field.name}
-                value={formData[field.name]}
-                onChange={handleChange}
-                required
-              />
+              <input type={field.type} className="form-control" 
+              name={field.name} value={formData[field.name]} onChange={handleChange} required/>
             </div>
           ))}
         </div>

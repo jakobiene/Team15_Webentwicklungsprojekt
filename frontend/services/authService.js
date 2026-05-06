@@ -1,4 +1,8 @@
 
+/*
+
+*/
+
 //REGISTER
 export async function registerUser(formData) { // funktion wie Repository in Kotlin 
   const response = await fetch("http://localhost:5000/api/register", { //backend-URL API-Endpunkt
@@ -24,22 +28,41 @@ export async function loginUser(credentials) {
         headers: {
             "Content-Type": "application/json",
         },
-        credentials: "inlucde", //cookies
+        credentials: "include", //cookies
         body: JSON.stringify(credentials),
     });        
     const data = await response.json();
     if (!response.ok) {
         throw new Error(data.message || "Login fehlgeschlagen");
     }   
-    return response.json();
+    return data; 
 }       
 
 
 
 //LOGOUT
 
+export async function logoutUser() {
+    const response = await fetch
+    ("http://localhost:5000/api/logout", {method: "POST", credentials: "include",}); 
+    if(!response.ok){
+        throw new Error("Logout fehlgeschalgen"); 
+    }
+    return response.json();
+
+}
 
 
 
 //Current User
+export async function getCurrentUser() {
+    const response = await fetch("http://localhost:5000/api/me",{ 
+        method: "GET",
+        credentials: "include",
+    });
+    if(!response.ok) {return null;}
+    const data = await response.json();
+    return data.user;
+
+}
 
