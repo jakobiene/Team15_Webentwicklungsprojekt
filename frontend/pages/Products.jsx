@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+//const [searchTerm, setSearchTerm] = useState("");
+
 const categories = [
   { id: 1, name: "Elektronik" },
   { id: 2, name: "Haushalt" },

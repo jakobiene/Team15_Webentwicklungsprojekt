@@ -148,6 +148,21 @@ app.post("/api/logout", (req, res) => {
   });
 });
 
+app.get("/api/categories", async (req, res) => {
+  try{
+    const [rows] = await pool.query(
+      `SELECT id, name
+       FROM categories
+       WHERE is_active = 1
+       ORDER BY sort_order, name`
+    );
+    return res.status(200).json({ categories: rows });
+  } catch (error) {
+       return res.status(200).json({ categories: rows });
+  }
+   
+});
+
 app.get("/api/me", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ user: null });
