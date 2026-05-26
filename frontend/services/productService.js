@@ -12,7 +12,7 @@ export async function getCategories() {
   return response.json();
 }
 
-
+/*
 //getProductsbyCategory
 export async function getProductsByCategory(categoryId) {
   const response = await fetch(
@@ -24,20 +24,17 @@ export async function getProductsByCategory(categoryId) {
   }
 
   return response.json();
-}
+} */
 
-
-//getProductById
- 
-
-//getProducts
+//getProducts old
+/*
 export async function getProducts(){
     const response = await fetch(`${API_URL}/products`);
        if (!response.ok) {
     throw new Error("Produkte konnten nicht geladen werden");
   }
   return response.json();
-}
+}*/
 
 //SearchProducts
 export async function searchProducts(searchTerm, categoryId ){
@@ -50,4 +47,25 @@ export async function searchProducts(searchTerm, categoryId ){
     }
     const response = await fetch(`${API_URL}/products?${params.toString()}`);
     return response.json();
+}
+
+
+export async function getProducts({ categoryId, search } = {}) {
+  const params = new URLSearchParams();
+
+  if (categoryId) params.append("categoryId", categoryId);
+  if (search) params.append("search", search);
+
+  const query = params.toString();
+  const url = query
+    ? `http://localhost:5000/api/products?${query}`
+    : "http://localhost:5000/api/products";
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Produkte konnten nicht geladen werden");
+  }
+
+  return response.json();
 }

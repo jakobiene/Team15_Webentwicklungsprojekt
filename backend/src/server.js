@@ -163,6 +163,44 @@ app.get("/api/categories", async (req, res) => {
    
 });
 
+app.get("/api/products", async (req, res) => {
+  try {
+    const { categoryId, search } = req.query;
+
+    let sql = `
+      SELECT id, category_id, name, image_url, price, rating
+      FROM products
+      WHERE is_active = 1
+    `;
+
+    const params = [];
+
+    if (categoryId) {
+      sql += " AND category_id = ?";
+      params.push(categoryId);
+    }
+
+    if (search) {
+      sql += " AND name LIKE ?";
+      params.push(`%${search}%`);
+    }
+
+    sql += " ORDER BY name";
+
+    const [rows] = await pool.query(sql, params);
+
+    return res.status(200).json({ products: rows });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Fehler beim Laden der Produkte",
+    });
+  }
+});
+
+
+
+
 app.get("/api/me", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ user: null });
