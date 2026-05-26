@@ -4,7 +4,7 @@ import { getCategories, getProducts } from "../services/productService";
 function Products() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,7 +27,7 @@ function Products() {
   }, []);
 
   useEffect(() => {
-    if (!selectedCategoryId) {
+    if (selectedCategoryId === undefined) {
       setProducts([]);
       setIsLoading(false);
       return;
@@ -83,6 +83,14 @@ function Products() {
         </div>
 
         <div className="d-flex flex-wrap gap-2 mb-4">
+          <button
+            className={`btn ${
+              selectedCategoryId === null ? "btn-dark" : "btn-outline-dark"
+            }`}
+            onClick={() => setSelectedCategoryId(null)}
+          >
+            Alle
+          </button>
           {categories.map((category) => (
             <button
               className={`btn ${
