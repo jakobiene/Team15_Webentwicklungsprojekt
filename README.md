@@ -83,6 +83,7 @@ VALUES
 
 ### 4.2 DB-Produkte (Insert)
 - Produkte
+
 INSERT INTO products (category_id, name, image_url, price, rating, is_active)
 VALUES
   -- Bücher
