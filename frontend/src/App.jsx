@@ -4,6 +4,7 @@ import RegisterSuccess from "../components/RegisterSuccess";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Home from "../pages/Home";
+import Products from "../pages/Products";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { getCurrentUser, logoutUser } from "../services/authService";
@@ -52,6 +53,7 @@ function App() {
       <Route path="/register/success" element={<RegisterSuccess />} />
       <Route path="/login" element={<Login onLogin={setUser} />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/products" element={<Products />} />
    
     </Routes>
     </>

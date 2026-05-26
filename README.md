@@ -30,7 +30,9 @@ npm install
 npm run dev
 ```
 
-### 4. DB-Setup (XAMPP,MAMP) MySQL
+### 4. DB-Setup (XAMPP,MAMP) MySQL 
+
+-- Apache starten, und MySQL starten localhost/phpmyadmin aufrufen.
 
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,6 +47,28 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  image_url VARCHAR(255),
+  price DECIMAL(10, 2) NOT NULL,
+  rating DECIMAL(2, 1) DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
 
 
 ### 4.1 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
