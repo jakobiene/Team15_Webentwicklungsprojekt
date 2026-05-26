@@ -1,61 +1,57 @@
-import { useState } from "react";
-
-//const [searchTerm, setSearchTerm] = useState("");
-
-const categories = [
-  { id: 1, name: "Elektronik" },
-  { id: 2, name: "Haushalt" },
-  { id: 3, name: "Freizeit" },
-];
-
-const products = [
-  {
-    id: 1,
-    categoryId: 1,
-    name: "Wireless Kopfhörer",
-    imageUrl: "https://placehold.co/600x400?text=Kopfhoerer",
-    price: 79.99,
-    rating: 4.6,
-  },
-  {
-    id: 2,
-    categoryId: 1,
-    name: "Smartwatch",
-    imageUrl: "https://placehold.co/600x400?text=Smartwatch",
-    price: 129.99,
-    rating: 4.4,
-  },
-  {
-    id: 3,
-    categoryId: 2,
-    name: "Kaffeemaschine",
-    imageUrl: "https://placehold.co/600x400?text=Kaffee",
-    price: 89.99,
-    rating: 4.7,
-  },
-  {
-    id: 4,
-    categoryId: 2,
-    name: "LED Schreibtischlampe",
-    imageUrl: "https://placehold.co/600x400?text=Lampe",
-    price: 34.99,
-    rating: 4.2,
-  },
-  {
-    id: 5,
-    categoryId: 3,
-    name: "Fitnessmatte",
-    imageUrl: "https://placehold.co/600x400?text=Fitness",
-    price: 24.99,
-    rating: 4.5,
-  },
-];
+import { useEffect, useState } from "react";
+import { getCategories, getProducts } from "../services/productService";
 
 function Products() {
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categories[0].id);
-  const filteredProducts = products.filter(
-    (product) => product.categoryId === selectedCategoryId
-  );
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        const loadedCategories = data.categories || [];
+
+        setCategories(loadedCategories);
+        setSelectedCategoryId(loadedCategories[0]?.id ?? null);
+        setError("");
+      } catch (err) {
+        setError("Kategorien konnten nicht geladen werden.");
+      }
+    }
+
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setProducts([]);
+      setIsLoading(false);
+      return;
+    }
+
+    async function loadProducts() {
+      try {
+        setIsLoading(true);
+        const data = await getProducts({
+          categoryId: selectedCategoryId,
+          search: searchTerm,
+        });
+
+        setProducts(data.products || []);
+        setError("");
+      } catch (err) {
+        setError("Produkte konnten nicht geladen werden.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProducts();
+  }, [selectedCategoryId, searchTerm]);
 
   return (
     <main className="bg-light min-vh-100">
@@ -69,6 +65,22 @@ function Products() {
             Wähle eine Kategorie und entdecke passende Produkte.
           </p>
         </header>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <div className="mb-4">
+          <label className="form-label fw-semibold" htmlFor="productSearch">
+            Produkte suchen
+          </label>
+          <input
+            className="form-control"
+            id="productSearch"
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Produktname eingeben..."
+            type="search"
+            value={searchTerm}
+          />
+        </div>
 
         <div className="d-flex flex-wrap gap-2 mb-4">
           {categories.map((category) => (
@@ -86,12 +98,20 @@ function Products() {
           ))}
         </div>
 
+        {isLoading && <p className="text-secondary">Produkte werden geladen...</p>}
+
+        {!isLoading && products.length === 0 && (
+          <p className="text-secondary">
+            Keine Produkte für diese Auswahl gefunden.
+          </p>
+        )}
+
         <div className="row g-4">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <div className="col-sm-6 col-lg-4" key={product.id}>
               <article className="card h-100 border-0 shadow-sm">
                 <img
-                  src={product.imageUrl}
+                  src={product.image_url}
                   className="card-img-top"
                   alt={product.name}
                 />
@@ -100,10 +120,10 @@ function Products() {
                     {product.name}
                   </h2>
                   <p className="text-secondary mb-2">
-                    Bewertung: {product.rating.toFixed(1)} / 5
+                    Bewertung: {Number(product.rating).toFixed(1)} / 5
                   </p>
                   <p className="fs-5 fw-semibold text-dark mb-0">
-                    {product.price.toFixed(2)} EUR
+                    {Number(product.price).toFixed(2)} EUR
                   </p>
                 </div>
               </article>

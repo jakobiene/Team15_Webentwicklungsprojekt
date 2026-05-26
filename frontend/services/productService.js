@@ -36,18 +36,8 @@ export async function getProducts(){
   return response.json();
 }*/
 
-//SearchProducts
-export async function searchProducts(searchTerm, categoryId ){
-    const params = new URLSearchParams();
-    if(searchTerm){
-        params.append("search", searchTerm);
-    }
-    if(categoryId){
-        params.append("categoryId", categoryId);
-    }
-    const response = await fetch(`${API_URL}/products?${params.toString()}`);
-    return response.json();
-}
+//SearchProducts (inside getProducts...)
+
 
 
 export async function getProducts({ categoryId, search } = {}) {
