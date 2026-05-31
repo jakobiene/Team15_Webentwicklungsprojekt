@@ -30,7 +30,9 @@ npm install
 npm run dev
 ```
 
-### 4. DB-Setup (XAMPP,MAMP) MySQL
+### 4. DB-Setup (XAMPP,MAMP) MySQL 
+
+-- Apache starten, und MySQL starten localhost/phpmyadmin aufrufen.
 
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,7 +49,70 @@ CREATE TABLE users (
 );
 
 
-### 4.1 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
+CREATE TABLE categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  image_url VARCHAR(255),
+  price DECIMAL(10, 2) NOT NULL,
+  rating DECIMAL(2, 1) DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+
+### 4.1 DB-Kategorien (Insert)
+- Kategorien
+
+INSERT INTO categories (name, sort_order, is_active)
+VALUES
+  ('Bücher', 1, TRUE),
+  ('Elektronik', 2, TRUE),
+  ('Haushalt', 3, TRUE),
+  ('Fitness', 4, TRUE);
+
+
+### 4.2 DB-Produkte (Insert)
+- Produkte
+
+INSERT INTO products (category_id, name, image_url, price, rating, is_active)
+VALUES
+  -- Bücher
+  (1, 'Designing Data-Intensive Applications', 'https://placehold.co/600x400?text=DDIA', 49.99, 4.9, TRUE),
+  (1, 'Clean Architecture', 'https://placehold.co/600x400?text=Clean+Architecture', 39.99, 4.7, TRUE),
+  (1, 'The Pragmatic Programmer', 'https://placehold.co/600x400?text=Pragmatic+Programmer', 34.99, 4.8, TRUE),
+  (1, 'Refactoring UI', 'https://placehold.co/600x400?text=Refactoring+UI', 79.99, 4.6, TRUE),
+
+  -- Elektronik
+  (2, 'Apple iPhone 15', 'https://placehold.co/600x400?text=iPhone+15', 849.00, 4.7, TRUE),
+  (2, 'Apple MacBook Air M3', 'https://placehold.co/600x400?text=MacBook+Air+M3', 1299.00, 4.8, TRUE),
+  (2, 'Apple AirPods Pro', 'https://placehold.co/600x400?text=AirPods+Pro', 249.00, 4.6, TRUE),
+  (2, 'Apple Watch Series 9', 'https://placehold.co/600x400?text=Apple+Watch', 449.00, 4.5, TRUE),
+
+  -- Haushalt
+  (3, 'Kaffeemaschine', 'https://placehold.co/600x400?text=Kaffeemaschine', 89.99, 4.4, TRUE),
+  (3, 'LED Schreibtischlampe', 'https://placehold.co/600x400?text=Lampe', 34.99, 4.2, TRUE),
+  (3, 'Kabelloser Staubsauger', 'https://placehold.co/600x400?text=Staubsauger', 179.99, 4.3, TRUE),
+  (3, 'Wasserkocher Edelstahl', 'https://placehold.co/600x400?text=Wasserkocher', 29.99, 4.1, TRUE),
+
+  -- Fitness
+  (4, 'Whey Protein Vanille', 'https://placehold.co/600x400?text=Whey+Protein', 29.99, 4.5, TRUE),
+  (4, 'Creatine Monohydrate', 'https://placehold.co/600x400?text=Creatine', 19.99, 4.7, TRUE),
+  (4, 'Protein Pulver Schokolade', 'https://placehold.co/600x400?text=Protein+Schoko', 31.99, 4.4, TRUE),
+  (4, 'Shaker 700ml', 'https://placehold.co/600x400?text=Shaker', 9.99, 4.2, TRUE);
+
+
+
+### 4.3 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
 - PORT=5000
 - DB_HOST=localhost
 - DB_USER=webadmin
