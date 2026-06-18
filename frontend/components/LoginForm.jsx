@@ -19,7 +19,7 @@ function LoginForm({ onSuccess }) {
       const data = await loginUser(formData);
       setError("");
       onSuccess(data);
-    } catch (err) {
+    } catch {
       setError("Login fehlgeschlagen");
     }
   }

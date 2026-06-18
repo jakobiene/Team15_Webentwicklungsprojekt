@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { getCategories, getProducts } from "../services/productService";
+import { addToCart } from "../services/cartService";
+import ProductCard from "../components/ProductCard";
 
-function Products() {
+function Products({ onCartChange }) {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(undefined);
@@ -18,7 +20,7 @@ function Products() {
         setCategories(loadedCategories);
         setSelectedCategoryId(loadedCategories[0]?.id ?? null);
         setError("");
-      } catch (err) {
+      } catch {
         setError("Kategorien konnten nicht geladen werden.");
       }
     }
@@ -27,9 +29,8 @@ function Products() {
   }, []);
 
   useEffect(() => {
+    // Vor dem Laden der Kategorien ist noch keine Kategorie gewählt -> nichts tun.
     if (selectedCategoryId === undefined) {
-      setProducts([]);
-      setIsLoading(false);
       return;
     }
 
@@ -43,7 +44,7 @@ function Products() {
 
         setProducts(data.products || []);
         setError("");
-      } catch (err) {
+      } catch {
         setError("Produkte konnten nicht geladen werden.");
       } finally {
         setIsLoading(false);
@@ -52,6 +53,18 @@ function Products() {
 
     loadProducts();
   }, [selectedCategoryId, searchTerm]);
+
+  // Produkt via AJAX in den Warenkorb legen, ohne die Seite zu verlassen (US31).
+  // Die zurückgelieferte Anzahl aktualisiert das Warenkorb-Badge in der Navbar (US32).
+  async function handleAddToCart(productId) {
+    try {
+      const cart = await addToCart(productId, 1);
+      onCartChange?.(cart.count);
+      setError("");
+    } catch {
+      setError("Produkt konnte nicht in den Warenkorb gelegt werden.");
+    }
+  }
 
   return (
     <main className="bg-light min-vh-100">
@@ -117,24 +130,7 @@ function Products() {
         <div className="row g-4">
           {products.map((product) => (
             <div className="col-sm-6 col-lg-4" key={product.id}>
-              <article className="card h-100 border-0 shadow-sm">
-                <img
-                  src={product.image_url}
-                  className="card-img-top"
-                  alt={product.name}
-                />
-                <div className="card-body">
-                  <h2 className="h5 fw-bold text-dark mb-2">
-                    {product.name}
-                  </h2>
-                  <p className="text-secondary mb-2">
-                    Bewertung: {Number(product.rating).toFixed(1)} / 5
-                  </p>
-                  <p className="fs-5 fw-semibold text-dark mb-0">
-                    {Number(product.price).toFixed(2)} EUR
-                  </p>
-                </div>
-              </article>
+              <ProductCard product={product} onAdd={handleAddToCart} />
             </div>
           ))}
         </div>

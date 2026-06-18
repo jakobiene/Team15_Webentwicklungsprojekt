@@ -18,11 +18,10 @@ const navItemsByRole = {
     { label: "Home", path: "/" },
     { label: "Produkte bearbeiten", path: "/admin/products" },
     { label: "Kunden bearbeiten", path: "/admin/customers" },
-    { label: "Gutscheine verwalten", path: "/admin/coupons" },
   ],
 };
 
-function Navbar({ role, onLogout }) {
+function Navbar({ role, onLogout, cartCount = 0 }) {
   const navItems = navItemsByRole[role] ?? navItemsByRole[0];
 
   return (
@@ -43,6 +42,10 @@ function Navbar({ role, onLogout }) {
                   to={item.path}
                 >
                   {item.label}
+                  {/* Warenkorb-Anzahl wird via AJAX aktualisiert (US32) */}
+                  {item.path === "/cart" && cartCount > 0 && (
+                    <span className="badge bg-primary rounded-pill ms-1">{cartCount}</span>
+                  )}
                 </NavLink>
               </li>
             ))}
