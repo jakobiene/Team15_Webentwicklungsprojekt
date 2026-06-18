@@ -9,6 +9,8 @@ import session from "express-session"; // Session-Management
 import * as userService from "./services/userService.js";
 import * as productService from "./services/productService.js";
 import * as cartService from "./services/cartService.js";
+import * as orderService from "./services/orderService.js";
+import { requireAuth } from "./middleware/auth.js";
 
 dotenv.config(); // lädt Umgebungsvariablen aus .env (z. B. PORT, DB-Zugang)
 
@@ -222,6 +224,107 @@ app.delete("/api/cart/:productId", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Fehler beim Entfernen aus dem Warenkorb" });
+  }
+});
+
+// ============================================================
+// Bestellungen (US50/US51, US64/US65) – nur für eingeloggte User
+// ============================================================
+
+// Bestellung aus dem aktuellen Warenkorb anlegen (US50).
+app.post("/api/orders", requireAuth, async (req, res) => {
+  try {
+    // Konto-Status erneut prüfen: deaktivierte Kunden dürfen nicht bestellen (US81).
+    const dbUser = await userService.findUserByIdWithHash(req.session.user.id);
+    if (!dbUser || !dbUser.is_active) {
+      return res.status(403).json({ message: "Dieses Konto kann keine Bestellungen aufgeben" });
+    }
+
+    const cartView = await cartService.getCartView(req.session);
+    if (cartView.items.length === 0) {
+      return res.status(400).json({ message: "Der Warenkorb ist leer" });
+    }
+
+    const orderId = await orderService.createOrder(req.session.user.id, cartView);
+    cartService.clearCart(req.session); // Warenkorb nach erfolgreicher Bestellung leeren
+    const order = await orderService.findOrderById(orderId, req.session.user.id);
+    return res.status(201).json({ message: "Bestellung erfolgreich", order });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler bei der Bestellung" });
+  }
+});
+
+// Eigene Bestellungen auflisten (US64).
+app.get("/api/orders", requireAuth, async (req, res) => {
+  try {
+    const orders = await orderService.findOrdersByUser(req.session.user.id);
+    return res.json({ orders });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Bestellungen" });
+  }
+});
+
+// Details einer eigenen Bestellung (US64).
+app.get("/api/orders/:id", requireAuth, async (req, res) => {
+  try {
+    const data = await orderService.findOrderById(Number(req.params.id), req.session.user.id);
+    if (!data) return res.status(404).json({ message: "Bestellung nicht gefunden" });
+    return res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Bestellung" });
+  }
+});
+
+// Rechnungsdaten zu einer Bestellung: Positionen, Datum, Rechnungsnummer + Anschrift (US65).
+app.get("/api/orders/:id/invoice", requireAuth, async (req, res) => {
+  try {
+    const data = await orderService.findOrderById(Number(req.params.id), req.session.user.id);
+    if (!data) return res.status(404).json({ message: "Bestellung nicht gefunden" });
+    const customer = await userService.findPublicUserById(req.session.user.id);
+    return res.json({ ...data, customer });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Rechnung" });
+  }
+});
+
+// ============================================================
+// Konto: Stammdaten bearbeiten (US61–US63)
+// ============================================================
+
+app.put("/api/account", requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, anrede, vorname, nachname, adresse, plz, ort, email } = req.body;
+
+    // Pflichtfelder prüfen
+    if (!anrede || !vorname || !nachname || !adresse || !plz || !ort || !email) {
+      return res.status(400).json({ message: "Alle Felder müssen ausgefüllt werden" });
+    }
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Ungültige E-Mail-Adresse" });
+    }
+
+    // Änderungen sensibler Daten erfordern das aktuelle Passwort (US63).
+    const dbUser = await userService.findUserByIdWithHash(req.session.user.id);
+    const passwordMatch = await bcrypt.compare(currentPassword ?? "", dbUser.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Aktuelles Passwort ist falsch" });
+    }
+
+    const updated = await userService.updateStammdaten(req.session.user.id, {
+      anrede, vorname, nachname, adresse, plz, ort, email,
+    });
+    req.session.user = updated; // Session mit neuen Daten aktualisieren
+    return res.json({ message: "Daten aktualisiert", user: updated });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "E-Mail-Adresse bereits vergeben" });
+    }
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Aktualisieren der Daten" });
   }
 });
 

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchCart, updateCartItem, removeCartItem } from "../services/cartService";
+import { placeOrder } from "../services/orderService";
 
-function Cart({ onCartChange }) {
+function Cart({ user, onCartChange }) {
   const [cart, setCart] = useState({ items: [], total: 0, count: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [orderError, setOrderError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function load() {
@@ -38,6 +42,22 @@ function Cart({ onCartChange }) {
       applyCart(await removeCartItem(productId));
     } catch {
       setError("Produkt konnte nicht entfernt werden");
+    }
+  }
+
+  // Bestellung auslösen (US50). Nur eingeloggte User dürfen bestellen;
+  // Gäste werden zum Login geschickt – der Warenkorb bleibt dabei erhalten.
+  async function handleOrder() {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const data = await placeOrder();
+      onCartChange?.(0);
+      navigate(`/orders/${data.order.order.id}`); // direkt zur Bestelldetailseite
+    } catch (err) {
+      setOrderError(err.message);
     }
   }
 
@@ -91,6 +111,17 @@ function Cart({ onCartChange }) {
 
           <div className="d-flex justify-content-end">
             <h4>Gesamt: {Number(cart.total).toFixed(2)} €</h4>
+          </div>
+
+          {orderError && <div className="alert alert-danger mt-3">{orderError}</div>}
+
+          <div className="d-flex justify-content-end align-items-center gap-3 mt-3">
+            {!user && (
+              <span className="text-muted">Zum Bestellen bitte anmelden.</span>
+            )}
+            <button className="btn btn-dark btn-lg" onClick={handleOrder}>
+              {user ? "Jetzt bestellen" : "Anmelden & bestellen"}
+            </button>
           </div>
         </>
       )}
