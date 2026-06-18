@@ -49,6 +49,32 @@ export async function updateStammdaten(id, data) {
   return findPublicUserById(id);
 }
 
+// --- Admin-Operationen (US80/US81) ---
+
+// Listet alle Kunden (role = 0) inkl. Anzahl ihrer Bestellungen auf (US80).
+export async function findAllCustomers() {
+  const [rows] = await pool.query(
+    `SELECT u.id, u.anrede, u.vorname, u.nachname, u.email, u.username,
+            u.is_active, u.created_at,
+            COUNT(o.id) AS order_count
+     FROM users u
+     LEFT JOIN orders o ON o.user_id = u.id
+     WHERE u.role = 0
+     GROUP BY u.id
+     ORDER BY u.nachname, u.vorname`
+  );
+  return rows;
+}
+
+// Setzt einen Kunden aktiv/inaktiv (US81). Admins (role = 2) bleiben unangetastet.
+export async function setCustomerActive(id, isActive) {
+  const [result] = await pool.query(
+    "UPDATE users SET is_active = ? WHERE id = ? AND role = 0",
+    [isActive ? 1 : 0, id]
+  );
+  return result.affectedRows > 0;
+}
+
 // Entfernt den Hash aus einem vollständigen User-Objekt (für die Session).
 export function toPublicUser(user) {
   if (!user) return null;

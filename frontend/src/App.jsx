@@ -10,7 +10,8 @@ import Cart from "../pages/Cart";
 import Account from "../pages/Account";
 import OrderDetail from "../pages/OrderDetail";
 import InvoicePrint from "../pages/InvoicePrint";
-import ComingSoon from "../pages/ComingSoon";
+import AdminProducts from "../pages/AdminProducts";
+import AdminCustomers from "../pages/AdminCustomers";
 import Navbar from "../components/Navbar";
 import RequireRole from "../components/RequireRole";
 import { getCurrentUser, logoutUser } from "../services/authService";
@@ -101,12 +102,12 @@ function App() {
           }
         />
 
-        {/* Admin-Bereiche aus Sprint 4 – Platzhalter */}
+        {/* Admin-Bereiche (Sprint 4) */}
         <Route
           path="/admin/products"
           element={
             <RequireRole user={user} ready={authReady} adminOnly>
-              <ComingSoon title="Produkte bearbeiten" />
+              <AdminProducts />
             </RequireRole>
           }
         />
@@ -114,7 +115,7 @@ function App() {
           path="/admin/customers"
           element={
             <RequireRole user={user} ready={authReady} adminOnly>
-              <ComingSoon title="Kunden bearbeiten" />
+              <AdminCustomers />
             </RequireRole>
           }
         />
