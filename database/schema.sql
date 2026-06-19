@@ -10,6 +10,10 @@ DROP DATABASE IF EXISTS webshop;
 CREATE DATABASE webshop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE webshop;
 
+-- Wichtig: Datei ist UTF-8. Ohne SET NAMES interpretiert der MySQL-Client unter
+-- Windows die Bytes als Konsolen-Codepage (cp850) -> Umlaute würden zerstört.
+SET NAMES utf8mb4;
+
 -- ------------------------------------------------------------
 -- Benutzer (Gäste registrieren sich hier; role/is_active steuern Rechte)
 -- ------------------------------------------------------------
@@ -86,35 +90,39 @@ CREATE TABLE order_items (
 -- Seed-Daten
 -- ============================================================
 
--- Kategorien
+-- Kategorien (Branche: Sport & Fitness)
 INSERT INTO categories (name, sort_order, is_active) VALUES
-  ('Bücher',     1, TRUE),
-  ('Elektronik', 2, TRUE),
-  ('Haushalt',   3, TRUE),
-  ('Fitness',    4, TRUE);
+  ('Krafttraining',        1, TRUE),
+  ('Cardio',               2, TRUE),
+  ('Supplements',          3, TRUE),
+  ('Bekleidung & Zubehör', 4, TRUE);
 
--- Produkte
+-- Produkte (Sport & Fitness)
 INSERT INTO products (category_id, name, description, image_url, price, rating, is_active) VALUES
-  -- Bücher
-  (1, 'Designing Data-Intensive Applications', 'Standardwerk über verteilte Systeme und Datenarchitektur.', 'https://placehold.co/600x400?text=DDIA', 49.99, 4.9, TRUE),
-  (1, 'Clean Architecture', 'Prinzipien für wartbare Softwarearchitektur.', 'https://placehold.co/600x400?text=Clean+Architecture', 39.99, 4.7, TRUE),
-  (1, 'The Pragmatic Programmer', 'Zeitlose Tipps für professionelle Entwickler.', 'https://placehold.co/600x400?text=Pragmatic+Programmer', 34.99, 4.8, TRUE),
-  (1, 'Refactoring UI', 'Praktische Anleitung für besseres UI-Design.', 'https://placehold.co/600x400?text=Refactoring+UI', 79.99, 4.6, TRUE),
-  -- Elektronik
-  (2, 'Apple iPhone 15', 'Smartphone mit A16-Chip und 48-MP-Kamera.', 'https://placehold.co/600x400?text=iPhone+15', 849.00, 4.7, TRUE),
-  (2, 'Apple MacBook Air M3', 'Leichtes Notebook mit M3-Chip.', 'https://placehold.co/600x400?text=MacBook+Air+M3', 1299.00, 4.8, TRUE),
-  (2, 'Apple AirPods Pro', 'In-Ear-Kopfhörer mit aktiver Geräuschunterdrückung.', 'https://placehold.co/600x400?text=AirPods+Pro', 249.00, 4.6, TRUE),
-  (2, 'Apple Watch Series 9', 'Smartwatch mit Fitness- und Gesundheitsfunktionen.', 'https://placehold.co/600x400?text=Apple+Watch', 449.00, 4.5, TRUE),
-  -- Haushalt
-  (3, 'Kaffeemaschine', 'Filterkaffeemaschine mit Timer.', 'https://placehold.co/600x400?text=Kaffeemaschine', 89.99, 4.4, TRUE),
-  (3, 'LED Schreibtischlampe', 'Dimmbare LED-Lampe mit USB-Anschluss.', 'https://placehold.co/600x400?text=Lampe', 34.99, 4.2, TRUE),
-  (3, 'Kabelloser Staubsauger', 'Akku-Staubsauger mit hoher Saugkraft.', 'https://placehold.co/600x400?text=Staubsauger', 179.99, 4.3, TRUE),
-  (3, 'Wasserkocher Edelstahl', '1,7-Liter-Wasserkocher aus Edelstahl.', 'https://placehold.co/600x400?text=Wasserkocher', 29.99, 4.1, TRUE),
-  -- Fitness
-  (4, 'Whey Protein Vanille', 'Molkenprotein, Geschmack Vanille, 1 kg.', 'https://placehold.co/600x400?text=Whey+Protein', 29.99, 4.5, TRUE),
-  (4, 'Creatine Monohydrate', 'Reines Kreatin-Monohydrat, 500 g.', 'https://placehold.co/600x400?text=Creatine', 19.99, 4.7, TRUE),
-  (4, 'Protein Pulver Schokolade', 'Proteinpulver, Geschmack Schokolade, 1 kg.', 'https://placehold.co/600x400?text=Protein+Schoko', 31.99, 4.4, TRUE),
-  (4, 'Shaker 700ml', 'Auslaufsicherer Shaker mit Sieb.', 'https://placehold.co/600x400?text=Shaker', 9.99, 4.2, TRUE);
+  -- Krafttraining
+  (1, 'Verstellbares Hantelset 20 kg', 'Kurzhantel-Set mit Gewichtsscheiben, stufenlos verstellbar bis 20 kg.', 'https://placehold.co/600x400?text=Hantelset', 89.99, 4.6, TRUE),
+  (1, 'Kettlebell 16 kg', 'Gusseisen-Kettlebell mit ergonomischem Griff für Schwungübungen.', 'https://placehold.co/600x400?text=Kettlebell', 39.99, 4.7, TRUE),
+  (1, 'Klimmzugstange für Türrahmen', 'Montagefreie Klimmzugstange, belastbar bis 130 kg.', 'https://placehold.co/600x400?text=Klimmzugstange', 27.99, 4.3, TRUE),
+  (1, 'Olympia-Langhantel 20 kg', '220 cm Langhantelstange aus gehärtetem Stahl, 50 mm Aufnahme.', 'https://placehold.co/600x400?text=Langhantel', 149.00, 4.8, TRUE),
+  (1, 'Widerstandsbänder Set (5-teilig)', 'Fitnessbänder in 5 Stärken inkl. Türanker und Tasche.', 'https://placehold.co/600x400?text=Widerstandsbaender', 24.99, 4.5, TRUE),
+  -- Cardio
+  (2, 'Faltbares Laufband', 'Elektrisches Laufband bis 12 km/h, platzsparend klappbar.', 'https://placehold.co/600x400?text=Laufband', 499.00, 4.4, TRUE),
+  (2, 'Ergometer Heimtrainer', 'Fahrradergometer mit 8 Widerstandsstufen und Pulsmessung.', 'https://placehold.co/600x400?text=Ergometer', 229.00, 4.3, TRUE),
+  (2, 'Speed Rope Springseil', 'Kugelgelagertes Springseil mit Aluminiumgriffen, längenverstellbar.', 'https://placehold.co/600x400?text=Springseil', 14.99, 4.6, TRUE),
+  (2, 'Magnetisches Rudergerät', 'Rudergerät mit leisem Magnetbremssystem und LCD-Display.', 'https://placehold.co/600x400?text=Rudergeraet', 379.00, 4.5, TRUE),
+  (2, 'Crosstrainer Ellipsentrainer', 'Crosstrainer mit Schwungmasse 9 kg für gelenkschonendes Training.', 'https://placehold.co/600x400?text=Crosstrainer', 549.00, 4.2, TRUE),
+  -- Supplements
+  (3, 'Whey Protein Vanille 1 kg', 'Molkenprotein-Konzentrat, 24 g Eiweiß pro Portion, Geschmack Vanille.', 'https://placehold.co/600x400?text=Whey+Vanille', 29.99, 4.6, TRUE),
+  (3, 'Creatin Monohydrat 500 g', 'Reines Kreatin-Monohydrat (Creapure), unterstützt Kraft & Leistung.', 'https://placehold.co/600x400?text=Creatin', 19.99, 4.8, TRUE),
+  (3, 'BCAA Pulver Beere 400 g', 'Aminosäuren im Verhältnis 2:1:1, Geschmack Waldbeere.', 'https://placehold.co/600x400?text=BCAA', 22.99, 4.3, TRUE),
+  (3, 'Pre-Workout Booster', 'Trainingsbooster mit Koffein, Beta-Alanin und Citrullin.', 'https://placehold.co/600x400?text=Pre-Workout', 27.99, 4.4, TRUE),
+  (3, 'Magnesium Kapseln (120 Stk.)', 'Hochdosiertes Magnesium zur Unterstützung der Muskelfunktion.', 'https://placehold.co/600x400?text=Magnesium', 12.99, 4.5, TRUE),
+  -- Bekleidung & Zubehör
+  (4, 'Trainingshandschuhe', 'Atmungsaktive Fitnesshandschuhe mit Handgelenkstütze.', 'https://placehold.co/600x400?text=Handschuhe', 16.99, 4.2, TRUE),
+  (4, 'Protein-Shaker 700 ml', 'Auslaufsicherer Shaker mit Sieb und Skala, BPA-frei.', 'https://placehold.co/600x400?text=Shaker', 9.99, 4.5, TRUE),
+  (4, 'Sport-Leggings', 'Blickdichte Leggings mit hohem Bund, dehnbar und schnelltrocknend.', 'https://placehold.co/600x400?text=Leggings', 34.99, 4.4, TRUE),
+  (4, 'Sporttasche 40 L', 'Robuste Gym-Bag mit Nassfach und Schuhfach.', 'https://placehold.co/600x400?text=Sporttasche', 29.99, 4.6, TRUE),
+  (4, 'Yogamatte rutschfest', 'Rutschfeste Trainingsmatte 183 x 61 cm, 6 mm, inkl. Tragegurt.', 'https://placehold.co/600x400?text=Yogamatte', 24.99, 4.7, TRUE);
 
 -- Benutzer
 -- Admin-Login:    admin@nil.shop   / Admin123!
