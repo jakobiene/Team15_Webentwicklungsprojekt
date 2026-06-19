@@ -8,7 +8,7 @@ import {
 } from "../services/adminService";
 
 // Produktverwaltung für Admins: anlegen, bearbeiten, löschen (US70–US73).
-// Produktfoto (US71) wahlweise als Datei-Upload ODER als Bild-URL.
+// Produktfoto (US71) wird als Datei hochgeladen.
 
 const EMPTY_FORM = {
   categoryId: "",
@@ -83,7 +83,6 @@ function AdminProducts() {
       categoryId: Number(form.categoryId),
       name: form.name,
       description: form.description,
-      imageUrl: form.imageUrl,
       price: Number(form.price),
       rating: form.rating === "" ? 0 : Number(form.rating),
     };
@@ -152,14 +151,18 @@ function AdminProducts() {
                 <label className="form-label">Beschreibung</label>
                 <textarea className="form-control" name="description" rows={2} value={form.description} onChange={handleChange} />
               </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Produktfoto hochladen</label>
-                <input className="form-control" type="file" accept="image/*" onChange={handleFileChange} />
-                <div className="form-text">Optional. Alternativ unten eine Bild-URL angeben.</div>
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Bild-URL (Alternative zum Upload)</label>
-                <input className="form-control" name="imageUrl" value={form.imageUrl} onChange={handleChange} placeholder="https://…" disabled={!!imageFile} />
+              <div className="col-12 mb-3">
+                <label className="form-label">Produktfoto</label>
+                <input
+                  className="form-control"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  required={!editingId}
+                />
+                {editingId && (
+                  <div className="form-text">Leer lassen, um das bestehende Foto zu behalten.</div>
+                )}
               </div>
               <div className="col-md-3 mb-3">
                 <label className="form-label">Preis (€)</label>

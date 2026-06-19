@@ -100,29 +100,29 @@ INSERT INTO categories (name, sort_order, is_active) VALUES
 -- Produkte (Sport & Fitness)
 INSERT INTO products (category_id, name, description, image_url, price, rating, is_active) VALUES
   -- Krafttraining
-  (1, 'Verstellbares Hantelset 20 kg', 'Kurzhantel-Set mit Gewichtsscheiben, stufenlos verstellbar bis 20 kg.', 'https://placehold.co/600x400?text=Hantelset', 89.99, 4.6, TRUE),
-  (1, 'Kettlebell 16 kg', 'Gusseisen-Kettlebell mit ergonomischem Griff für Schwungübungen.', 'https://placehold.co/600x400?text=Kettlebell', 39.99, 4.7, TRUE),
-  (1, 'Klimmzugstange für Türrahmen', 'Montagefreie Klimmzugstange, belastbar bis 130 kg.', 'https://placehold.co/600x400?text=Klimmzugstange', 27.99, 4.3, TRUE),
-  (1, 'Olympia-Langhantel 20 kg', '220 cm Langhantelstange aus gehärtetem Stahl, 50 mm Aufnahme.', 'https://placehold.co/600x400?text=Langhantel', 149.00, 4.8, TRUE),
-  (1, 'Widerstandsbänder Set (5-teilig)', 'Fitnessbänder in 5 Stärken inkl. Türanker und Tasche.', 'https://placehold.co/600x400?text=Widerstandsbaender', 24.99, 4.5, TRUE),
+  (1, 'Verstellbares Hantelset 20 kg', 'Kurzhantel-Set mit Gewichtsscheiben, stufenlos verstellbar bis 20 kg.', 'http://localhost:5000/uploads/hantelset.jpg', 89.99, 4.6, TRUE),
+  (1, 'Kettlebell 16 kg', 'Gusseisen-Kettlebell mit ergonomischem Griff für Schwungübungen.', 'http://localhost:5000/uploads/kettlebell.jpg', 39.99, 4.7, TRUE),
+  (1, 'Klimmzugstange für Türrahmen', 'Montagefreie Klimmzugstange, belastbar bis 130 kg.', 'http://localhost:5000/uploads/klimmzugstange.jpg', 27.99, 4.3, TRUE),
+  (1, 'Olympia-Langhantel 20 kg', '220 cm Langhantelstange aus gehärtetem Stahl, 50 mm Aufnahme.', 'http://localhost:5000/uploads/langhantel.jpg', 149.00, 4.8, TRUE),
+  (1, 'Widerstandsbänder Set (5-teilig)', 'Fitnessbänder in 5 Stärken inkl. Türanker und Tasche.', 'http://localhost:5000/uploads/widerstandsbaender.jpg', 24.99, 4.5, TRUE),
   -- Cardio
-  (2, 'Faltbares Laufband', 'Elektrisches Laufband bis 12 km/h, platzsparend klappbar.', 'https://placehold.co/600x400?text=Laufband', 499.00, 4.4, TRUE),
-  (2, 'Ergometer Heimtrainer', 'Fahrradergometer mit 8 Widerstandsstufen und Pulsmessung.', 'https://placehold.co/600x400?text=Ergometer', 229.00, 4.3, TRUE),
-  (2, 'Speed Rope Springseil', 'Kugelgelagertes Springseil mit Aluminiumgriffen, längenverstellbar.', 'https://placehold.co/600x400?text=Springseil', 14.99, 4.6, TRUE),
-  (2, 'Magnetisches Rudergerät', 'Rudergerät mit leisem Magnetbremssystem und LCD-Display.', 'https://placehold.co/600x400?text=Rudergeraet', 379.00, 4.5, TRUE),
-  (2, 'Crosstrainer Ellipsentrainer', 'Crosstrainer mit Schwungmasse 9 kg für gelenkschonendes Training.', 'https://placehold.co/600x400?text=Crosstrainer', 549.00, 4.2, TRUE),
+  (2, 'Faltbares Laufband', 'Elektrisches Laufband bis 12 km/h, platzsparend klappbar.', 'http://localhost:5000/uploads/laufband.jpg', 499.00, 4.4, TRUE),
+  (2, 'Ergometer Heimtrainer', 'Fahrradergometer mit 8 Widerstandsstufen und Pulsmessung.', 'http://localhost:5000/uploads/ergometer.jpg', 229.00, 4.3, TRUE),
+  (2, 'Speed Rope Springseil', 'Kugelgelagertes Springseil mit Aluminiumgriffen, längenverstellbar.', 'http://localhost:5000/uploads/springseil.jpg', 14.99, 4.6, TRUE),
+  (2, 'Magnetisches Rudergerät', 'Rudergerät mit leisem Magnetbremssystem und LCD-Display.', 'http://localhost:5000/uploads/rudergeraet.jpg', 379.00, 4.5, TRUE),
+  (2, 'Crosstrainer Ellipsentrainer', 'Crosstrainer mit Schwungmasse 9 kg für gelenkschonendes Training.', 'http://localhost:5000/uploads/crosstrainer.jpg', 549.00, 4.2, TRUE),
   -- Supplements
-  (3, 'Whey Protein Vanille 1 kg', 'Molkenprotein-Konzentrat, 24 g Eiweiß pro Portion, Geschmack Vanille.', 'https://placehold.co/600x400?text=Whey+Vanille', 29.99, 4.6, TRUE),
-  (3, 'Creatin Monohydrat 500 g', 'Reines Kreatin-Monohydrat (Creapure), unterstützt Kraft & Leistung.', 'https://placehold.co/600x400?text=Creatin', 19.99, 4.8, TRUE),
-  (3, 'BCAA Pulver Beere 400 g', 'Aminosäuren im Verhältnis 2:1:1, Geschmack Waldbeere.', 'https://placehold.co/600x400?text=BCAA', 22.99, 4.3, TRUE),
-  (3, 'Pre-Workout Booster', 'Trainingsbooster mit Koffein, Beta-Alanin und Citrullin.', 'https://placehold.co/600x400?text=Pre-Workout', 27.99, 4.4, TRUE),
-  (3, 'Magnesium Kapseln (120 Stk.)', 'Hochdosiertes Magnesium zur Unterstützung der Muskelfunktion.', 'https://placehold.co/600x400?text=Magnesium', 12.99, 4.5, TRUE),
+  (3, 'Whey Protein Vanille 1 kg', 'Molkenprotein-Konzentrat, 24 g Eiweiß pro Portion, Geschmack Vanille.', 'http://localhost:5000/uploads/whey-protein.jpg', 29.99, 4.6, TRUE),
+  (3, 'Creatin Monohydrat 500 g', 'Reines Kreatin-Monohydrat (Creapure), unterstützt Kraft & Leistung.', 'http://localhost:5000/uploads/creatin.jpg', 19.99, 4.8, TRUE),
+  (3, 'BCAA Pulver Beere 400 g', 'Aminosäuren im Verhältnis 2:1:1, Geschmack Waldbeere.', 'http://localhost:5000/uploads/bcaa.jpg', 22.99, 4.3, TRUE),
+  (3, 'Pre-Workout Booster', 'Trainingsbooster mit Koffein, Beta-Alanin und Citrullin.', 'http://localhost:5000/uploads/pre-workout.jpg', 27.99, 4.4, TRUE),
+  (3, 'Magnesium Kapseln (120 Stk.)', 'Hochdosiertes Magnesium zur Unterstützung der Muskelfunktion.', 'http://localhost:5000/uploads/magnesium.jpg', 12.99, 4.5, TRUE),
   -- Bekleidung & Zubehör
-  (4, 'Trainingshandschuhe', 'Atmungsaktive Fitnesshandschuhe mit Handgelenkstütze.', 'https://placehold.co/600x400?text=Handschuhe', 16.99, 4.2, TRUE),
-  (4, 'Protein-Shaker 700 ml', 'Auslaufsicherer Shaker mit Sieb und Skala, BPA-frei.', 'https://placehold.co/600x400?text=Shaker', 9.99, 4.5, TRUE),
-  (4, 'Sport-Leggings', 'Blickdichte Leggings mit hohem Bund, dehnbar und schnelltrocknend.', 'https://placehold.co/600x400?text=Leggings', 34.99, 4.4, TRUE),
-  (4, 'Sporttasche 40 L', 'Robuste Gym-Bag mit Nassfach und Schuhfach.', 'https://placehold.co/600x400?text=Sporttasche', 29.99, 4.6, TRUE),
-  (4, 'Yogamatte rutschfest', 'Rutschfeste Trainingsmatte 183 x 61 cm, 6 mm, inkl. Tragegurt.', 'https://placehold.co/600x400?text=Yogamatte', 24.99, 4.7, TRUE);
+  (4, 'Trainingshandschuhe', 'Atmungsaktive Fitnesshandschuhe mit Handgelenkstütze.', 'http://localhost:5000/uploads/handschuhe.jpg', 16.99, 4.2, TRUE),
+  (4, 'Protein-Shaker 700 ml', 'Auslaufsicherer Shaker mit Sieb und Skala, BPA-frei.', 'http://localhost:5000/uploads/shaker.jpg', 9.99, 4.5, TRUE),
+  (4, 'Sport-Leggings', 'Blickdichte Leggings mit hohem Bund, dehnbar und schnelltrocknend.', 'http://localhost:5000/uploads/leggings.jpg', 34.99, 4.4, TRUE),
+  (4, 'Sporttasche 40 L', 'Robuste Gym-Bag mit Nassfach und Schuhfach.', 'http://localhost:5000/uploads/sporttasche.jpg', 29.99, 4.6, TRUE),
+  (4, 'Yogamatte rutschfest', 'Rutschfeste Trainingsmatte 183 x 61 cm, 6 mm, inkl. Tragegurt.', 'http://localhost:5000/uploads/yogamatte.jpg', 24.99, 4.7, TRUE);
 
 -- Benutzer
 -- Admin-Login:    admin@nil.shop   / Admin123!

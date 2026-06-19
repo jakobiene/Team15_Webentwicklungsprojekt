@@ -382,16 +382,12 @@ function validateProduct(body) {
   return null;
 }
 
-// Ermittelt die zu speichernde Bild-URL (US71, Hybrid):
-// Wurde eine Datei hochgeladen, gewinnt sie; sonst die optionale Bild-URL aus dem Formular.
-function resolveImageUrl(req) {
-  if (req.file) {
-    return `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  }
-  return req.body.imageUrl || null;
+// URL der hochgeladenen Datei, oder null wenn keine Datei dabei war (US71).
+function uploadedImageUrl(req) {
+  return req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
 }
 
-// Produkt anlegen (US70/US71). upload.single("image") nimmt eine optionale Bilddatei entgegen.
+// Produkt anlegen (US70/US71). Das Foto wird als Datei hochgeladen.
 app.post("/api/admin/products", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
@@ -399,7 +395,7 @@ app.post("/api/admin/products", requireAdmin, upload.single("image"), async (req
 
     const { categoryId, name, description, price, rating } = req.body;
     const product = await productService.createProduct({
-      categoryId, name, description, imageUrl: resolveImageUrl(req), price, rating,
+      categoryId, name, description, imageUrl: uploadedImageUrl(req), price, rating,
     });
     return res.status(201).json({ product });
   } catch (error) {
@@ -408,15 +404,23 @@ app.post("/api/admin/products", requireAdmin, upload.single("image"), async (req
   }
 });
 
-// Produkt bearbeiten (US72).
+// Produkt bearbeiten (US72). Ohne neu hochgeladenes Foto bleibt das bestehende Bild erhalten.
 app.put("/api/admin/products/:id", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
     if (validationError) return res.status(400).json({ message: validationError });
 
+    const id = Number(req.params.id);
+    let imageUrl = uploadedImageUrl(req);
+    if (!imageUrl) {
+      // Kein neues Foto -> vorhandenes Bild beibehalten
+      const existing = await productService.findProductById(id);
+      imageUrl = existing?.image_url ?? null;
+    }
+
     const { categoryId, name, description, price, rating } = req.body;
-    const product = await productService.updateProduct(Number(req.params.id), {
-      categoryId, name, description, imageUrl: resolveImageUrl(req), price, rating,
+    const product = await productService.updateProduct(id, {
+      categoryId, name, description, imageUrl, price, rating,
     });
     if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });
     return res.json({ product });
