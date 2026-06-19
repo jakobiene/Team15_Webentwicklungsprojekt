@@ -18,7 +18,7 @@ function Products({ onCartChange }) {
         const loadedCategories = data.categories || [];
 
         setCategories(loadedCategories);
-        setSelectedCategoryId(loadedCategories[0]?.id ?? null);
+        setSelectedCategoryId(null); // Standard: Filter "Alle" (alle Kategorien anzeigen)
         setError("");
       } catch {
         setError("Kategorien konnten nicht geladen werden.");

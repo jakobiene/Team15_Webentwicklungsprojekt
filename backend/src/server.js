@@ -177,10 +177,9 @@ app.post("/api/logout", (req, res) => {
 });
 
 app.get("/api/me", (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ user: null });
-  }
-  return res.json({ user: req.session.user });
+  // Immer 200: Gäste erhalten user=null. So entsteht beim Seitenstart kein
+  // (harmloser, aber verwirrender) 401-Eintrag in der Browser-Konsole.
+  return res.status(200).json({ user: req.session.user ?? null });
 });
 
 // ============================================================
