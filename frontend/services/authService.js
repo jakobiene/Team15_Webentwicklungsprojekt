@@ -13,11 +13,14 @@ export async function registerUser(formData) { // funktion wie Repository in Kot
     body: JSON.stringify(formData),
   });
 
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error("Registrierung fehlgeschlagen");
+    // konkrete Fehlermeldung des Backends durchreichen (z. B. Passwortregeln,
+    // "E-Mail oder Benutzername bereits vergeben"), sonst generischer Fallback
+    throw new Error(data.message || "Registrierung fehlgeschlagen");
   }
 
-  return response.json();
+  return data;
 }
 
 

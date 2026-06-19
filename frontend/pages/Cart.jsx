@@ -61,18 +61,27 @@ function Cart({ user, onCartChange }) {
     }
   }
 
-  if (loading) return <div className="container py-4"><p className="text-muted">Wird geladen…</p></div>;
+  if (loading)
+    return (
+      <main className="bg-light min-vh-100">
+        <div className="container py-5"><p className="text-muted">Wird geladen…</p></div>
+      </main>
+    );
 
   return (
-    <div className="container py-4">
-      <h1 className="mb-4">Warenkorb</h1>
+    <main className="bg-light min-vh-100">
+      <div className="container py-5">
+        <header className="mb-4">
+          <h1 className="display-6 fw-bold text-dark mb-2">Warenkorb</h1>
+          {cart.items.length === 0 && (
+            <p className="text-secondary fs-5 mb-0">Dein Warenkorb ist leer.</p>
+          )}
+        </header>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
 
-      {cart.items.length === 0 ? (
-        <p className="text-muted">Dein Warenkorb ist leer.</p>
-      ) : (
-        <>
+        {cart.items.length > 0 && (
+          <>
           <ul className="list-group mb-4">
             {cart.items.map(({ product, quantity, subtotal }) => (
               <li className="list-group-item d-flex align-items-center gap-3" key={product.id}>
@@ -124,8 +133,9 @@ function Cart({ user, onCartChange }) {
             </button>
           </div>
         </>
-      )}
-    </div>
+        )}
+      </div>
+    </main>
   );
 }
 
