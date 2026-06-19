@@ -26,7 +26,7 @@ function LoginForm({ onSuccess }) {
 
   return (
     <>
-      <h2 className="fw-bold mb-1 text-primary">Anmelden</h2>
+      <h2 className="fw-bold mb-1 text-dark">Anmelden</h2>
       <p className="text-muted mb-4">Bitte gib deine Zugangsdaten ein.</p>
 
       {error && <div className="alert alert-danger">{error}</div>}
