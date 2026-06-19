@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt"; // PW-Hashing
 import validator from "validator"; // E-Mail-Validierung
 import session from "express-session"; // Session-Management
+import multer from "multer"; // Datei-Upload (Produktfotos, US71)
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 // Zentrale DB-Service-Klassen – die Endpoints enthalten selbst kein SQL (US01/US03).
 import * as userService from "./services/userService.js";
@@ -38,6 +42,31 @@ app.use(
     },
   })
 );
+
+// ----------------------------------------------------------------
+// Datei-Upload für Produktfotos (US71)
+// Bilder werden auf der Platte unter backend/uploads/ gespeichert und
+// statisch unter /uploads ausgeliefert.
+// ----------------------------------------------------------------
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadDir = path.join(__dirname, "..", "uploads");
+fs.mkdirSync(uploadDir, { recursive: true }); // Ordner sicherstellen
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  // eindeutiger Dateiname, Original-Endung beibehalten
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // max. 2 MB
+  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")), // nur Bilder
+});
+
+// Hochgeladene Bilder öffentlich abrufbar machen
+app.use("/uploads", express.static(uploadDir));
 
 // ============================================================
 // Hilfsfunktionen: Validierung
@@ -354,15 +383,24 @@ function validateProduct(body) {
   return null;
 }
 
-// Produkt anlegen (US70/US71 – Foto via image_url).
-app.post("/api/admin/products", requireAdmin, async (req, res) => {
+// Ermittelt die zu speichernde Bild-URL (US71, Hybrid):
+// Wurde eine Datei hochgeladen, gewinnt sie; sonst die optionale Bild-URL aus dem Formular.
+function resolveImageUrl(req) {
+  if (req.file) {
+    return `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  }
+  return req.body.imageUrl || null;
+}
+
+// Produkt anlegen (US70/US71). upload.single("image") nimmt eine optionale Bilddatei entgegen.
+app.post("/api/admin/products", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
     if (validationError) return res.status(400).json({ message: validationError });
 
-    const { categoryId, name, description, imageUrl, price, rating } = req.body;
+    const { categoryId, name, description, price, rating } = req.body;
     const product = await productService.createProduct({
-      categoryId, name, description, imageUrl, price, rating,
+      categoryId, name, description, imageUrl: resolveImageUrl(req), price, rating,
     });
     return res.status(201).json({ product });
   } catch (error) {
@@ -372,14 +410,14 @@ app.post("/api/admin/products", requireAdmin, async (req, res) => {
 });
 
 // Produkt bearbeiten (US72).
-app.put("/api/admin/products/:id", requireAdmin, async (req, res) => {
+app.put("/api/admin/products/:id", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
     if (validationError) return res.status(400).json({ message: validationError });
 
-    const { categoryId, name, description, imageUrl, price, rating } = req.body;
+    const { categoryId, name, description, price, rating } = req.body;
     const product = await productService.updateProduct(Number(req.params.id), {
-      categoryId, name, description, imageUrl, price, rating,
+      categoryId, name, description, imageUrl: resolveImageUrl(req), price, rating,
     });
     if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });
     return res.json({ product });

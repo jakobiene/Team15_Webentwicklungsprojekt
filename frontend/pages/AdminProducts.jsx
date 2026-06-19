@@ -8,7 +8,7 @@ import {
 } from "../services/adminService";
 
 // Produktverwaltung für Admins: anlegen, bearbeiten, löschen (US70–US73).
-// Das Produktfoto wird als Bild-URL gepflegt (US71).
+// Produktfoto (US71) wahlweise als Datei-Upload ODER als Bild-URL.
 
 const EMPTY_FORM = {
   categoryId: "",
@@ -23,6 +23,7 @@ function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [imageFile, setImageFile] = useState(null); // optional hochgeladene Bilddatei (US71)
   const [editingId, setEditingId] = useState(null); // null = Neuanlage
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -57,6 +58,7 @@ function AdminProducts() {
 
   function resetForm() {
     setForm(EMPTY_FORM);
+    setImageFile(null);
     setEditingId(null);
   }
 
@@ -69,6 +71,7 @@ function AdminProducts() {
       price: String(product.price),
       rating: String(product.rating),
     });
+    setImageFile(null);
     setEditingId(product.id);
     setMessage("");
     setError("");
@@ -86,10 +89,10 @@ function AdminProducts() {
     };
     try {
       if (editingId) {
-        await updateProduct(editingId, payload);
+        await updateProduct(editingId, payload, imageFile);
         setMessage("Produkt aktualisiert.");
       } else {
-        await createProduct(payload);
+        await createProduct(payload, imageFile);
         setMessage("Produkt angelegt.");
       }
       resetForm();
@@ -98,6 +101,11 @@ function AdminProducts() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  // Ausgewählte Bilddatei übernehmen (US71).
+  function handleFileChange(e) {
+    setImageFile(e.target.files?.[0] ?? null);
   }
 
   async function handleDelete(product) {
@@ -145,8 +153,13 @@ function AdminProducts() {
                 <textarea className="form-control" name="description" rows={2} value={form.description} onChange={handleChange} />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label">Bild-URL (Foto)</label>
-                <input className="form-control" name="imageUrl" value={form.imageUrl} onChange={handleChange} placeholder="https://…" />
+                <label className="form-label">Produktfoto hochladen</label>
+                <input className="form-control" type="file" accept="image/*" onChange={handleFileChange} />
+                <div className="form-text">Optional. Alternativ unten eine Bild-URL angeben.</div>
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Bild-URL (Alternative zum Upload)</label>
+                <input className="form-control" name="imageUrl" value={form.imageUrl} onChange={handleChange} placeholder="https://…" disabled={!!imageFile} />
               </div>
               <div className="col-md-3 mb-3">
                 <label className="form-label">Preis (€)</label>
@@ -157,9 +170,14 @@ function AdminProducts() {
                 <input className="form-control" type="number" step="0.1" min="0" max="5" name="rating" value={form.rating} onChange={handleChange} />
               </div>
             </div>
-            {/* Vorschau des Produktfotos (US71) */}
-            {form.imageUrl && (
-              <img src={form.imageUrl} alt="Vorschau" style={{ height: 80, objectFit: "cover" }} className="mb-3 rounded" />
+            {/* Vorschau des Produktfotos (US71): hochgeladene Datei hat Vorrang vor der URL */}
+            {(imageFile || form.imageUrl) && (
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : form.imageUrl}
+                alt="Vorschau"
+                style={{ height: 80, objectFit: "cover" }}
+                className="mb-3 rounded"
+              />
             )}
             <div>
               <button className="btn btn-dark" type="submit">
