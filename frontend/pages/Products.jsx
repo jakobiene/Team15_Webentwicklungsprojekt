@@ -95,7 +95,7 @@ function Products({ onCartChange }) {
         <div className="d-flex flex-wrap gap-2 mb-4">
           <button
             className={`btn ${
-              selectedCategoryId === null ? "btn-dark" : "btn-outline-dark"
+              selectedCategoryId === null ? "btn-dark" : "btn-outline-dark" // das hier ist der Alle-Button, wird === null
             }`}
             onClick={() => setSelectedCategoryId(null)}
           >
