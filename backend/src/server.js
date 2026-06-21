@@ -130,18 +130,19 @@ const fakeHash = await bcrypt.hash("fakepassword", 10);
 
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body;
+    const { login, password, rememberMe } = req.body;
 
-    if (!validateEmail(email)) {
-      return res.status(400).json({ message: "Ungültige E-Mail" });
+    if (!login || !password) {
+      return res.status(400).json({ message: "Bitte Benutzername/E-Mail und Passwort angeben" });
     }
 
-    const user = await userService.findUserByEmailWithHash(email);
+    // Login per E-Mail ODER Benutzername (US20)
+    const user = await userService.findUserByLoginWithHash(login);
     const hashToCompare = user ? user.password_hash : fakeHash;
     const passwordMatch = await bcrypt.compare(password ?? "", hashToCompare);
 
     if (!user || !passwordMatch) {
-      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+      return res.status(401).json({ message: "Ungültige Zugangsdaten" });
     }
 
     // Deaktivierte Kunden können sich nicht einloggen (US81).
