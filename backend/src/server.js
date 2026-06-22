@@ -1,92 +1,92 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt"; //PW Hashing 
-import validator from "validator"; //E-Mail-Validierung
-import { pool } from "../database/db.js" // Importieren des Verbindungs-Pools aus der db.js, um später in den API-Endpunkten auf die Datenbank zugreifen zu können
-import session from "express-session";  // Sesh Mgmt für effizientes coding
+import bcrypt from "bcrypt"; // PW-Hashing
+import validator from "validator"; // E-Mail-Validierung
+import session from "express-session"; // Session-Management
 
-dotenv.config(); // lädt die Umgebungsvariablen aus der .env-Datei, damit wir z.B. den PORT flexibel konfigurieren können
+// Zentrale DB-Service-Klassen – die Endpoints enthalten selbst kein SQL (US01/US03).
+import * as userService from "./services/userService.js";
+import * as productService from "./services/productService.js";
+import * as cartService from "./services/cartService.js";
 
-const app = express(); // Erstellt eine neue Express-Anwendung
-const PORT = process.env.PORT || 5000; //
+dotenv.config(); // lädt Umgebungsvariablen aus .env (z. B. PORT, DB-Zugang)
 
-app.use(cors(
-  {
-  origin: "http://localhost:5173",
-  credentials: true
-  }
-)); // erlaubt Frontend, auf die API zuzugreifen
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json()); // ermöglicht das Parsen von JSON-Daten im Request-Body -> req.body nutzt diesen Middleware, um die Daten zu verarbeiten, die vom Frontend gesendet werden (z.B. bei der Registrierung eines Benutzers)
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, // erlaubt das Mitsenden des Session-Cookies
+  })
+);
 
-app.use(session({
-secret: process.env.SESSION_SECRET || "dev-secret", 
-resave: false,
-saveUninitialized: false,
-cookie: {
-  httpOnly: true,
-  secure: false,
-  sameSite: "lax",
+app.use(express.json()); // JSON-Body parsen -> req.body
 
-},
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dev-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    },
+  })
+);
 
-app.listen(PORT, () => {
-  console.log(`Backend läuft auf http://localhost:${PORT}`);
-});
-
- 
-function validateRegisterData(data) {
-  const { anrede, vorname,nachname, adresse,plz, ort, email,username,password } = data;
-  if (!anrede || !vorname || !nachname || !adresse || !plz || !ort || !email || !username || !password) {
-    throw new Error("Alle Felder müssen ausgefüllt werden");
-  }
-  const validatedEmail = validateEmail(email); // mail wird validiert und wenn false dann -> true und geht in if.
-  if (!validatedEmail) {
-    throw new Error("Ungültige E-Mail-Adresse");
-  }
-
-  if (password.length < 8) {
-    throw new Error("Passwort muss mindestens 8 Zeichen lang sein");
-  }
-  if (!/\d/.test(password) && !/[!@#$%^&*]/.test(password) && !/[A-Z]/.test(password) ) {
-    throw new Error("Passwort muss mindestens eine Zahl, ein Sonderzeichen und einen Großbuchstaben enthalten");
-  }  
-  if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-    return "Ungültiger Benutzername";
-  }
-return null;
-
-}
+// ============================================================
+// Hilfsfunktionen: Validierung
+// ============================================================
 
 function validateEmail(email) {
-if (typeof email !== "string") return false;
-email = email.trim();
-if (email === "") return false;
-return validator.isEmail(email);
+  if (typeof email !== "string") return false;
+  return validator.isEmail(email.trim());
 }
 
+// Prüft die Registrierungsdaten serverseitig (US10).
+// Gibt eine Fehlermeldung (String) zurück oder null, wenn alles gültig ist.
+function validateRegisterData(data) {
+  const { anrede, vorname, nachname, adresse, plz, ort, email, username, password } = data;
+
+  if (!anrede || !vorname || !nachname || !adresse || !plz || !ort || !email || !username || !password) {
+    return "Alle Felder müssen ausgefüllt werden";
+  }
+  if (!validateEmail(email)) {
+    return "Ungültige E-Mail-Adresse";
+  }
+  if (password.length < 8) {
+    return "Passwort muss mindestens 8 Zeichen lang sein";
+  }
+  // mindestens ein Großbuchstabe, eine Zahl und ein Sonderzeichen
+  if (!/[A-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*]/.test(password)) {
+    return "Passwort muss einen Großbuchstaben, eine Zahl und ein Sonderzeichen enthalten";
+  }
+  if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+    return "Ungültiger Benutzername (3–30 Zeichen, nur Buchstaben/Zahlen/_)";
+  }
+  return null;
+}
+
+// ============================================================
+// Auth: Registrierung / Login / Logout / aktueller User
+// ============================================================
 
 app.post("/api/register", async (req, res) => {
   try {
-  const {anrede,vorname,nachname,adresse,plz,ort,email,username,password,} = req.body;  //Destrukturierung der empfangenen Daten aus req.body, um die einzelnen Felder leichter verwenden zu können
-   const validationError = validateRegisterData(req.body)
+    const validationError = validateRegisterData(req.body);
     if (validationError) {
       return res.status(400).json({ message: validationError });
     }
-    const passwordHash = await bcrypt.hash(password, 10); //hashing mit bcrypt 
-    await pool.query(
-      `INSERT INTO users 
-      (anrede, vorname, nachname, adresse, plz, ort, email, username, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,  
-      [anrede, vorname, nachname, adresse, plz, ort, email, username, passwordHash]
-    ); 
+
+    const passwordHash = await bcrypt.hash(req.body.password, 10); // Hashing (US11)
+    await userService.createUser({ ...req.body, passwordHash });
 
     return res.status(201).json({ message: "Registrierung erfolgreich" });
-
   } catch (error) {
-    if(error.code === "ER_DUP_ENTRY") {
+    if (error.code === "ER_DUP_ENTRY") {
       return res.status(400).json({ message: "E-Mail oder Benutzername bereits vergeben" });
     }
     console.error(error);
@@ -94,117 +94,137 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// REQ = REQUEST
-// RES = RESPONSE
-const fakeHash = await bcrypt.hash("fakepassword", 10); //fake-hash für timing attack prevention (außerhalb vom Endpoint)
-app.post("/api/login", async (req, res) => {  
-  try
-    {const { email, password, rememberMe } = req.body;
-    const validationError = validateEmail(req.body.email);
-    if (!validationError) {
+// Fake-Hash gegen Timing-Angriffe (vergleicht auch bei unbekannter E-Mail).
+const fakeHash = await bcrypt.hash("fakepassword", 10);
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password, rememberMe } = req.body;
+
+    if (!validateEmail(email)) {
       return res.status(400).json({ message: "Ungültige E-Mail" });
     }
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);  
 
- 
-    const user = rows[0];
+    const user = await userService.findUserByEmailWithHash(email);
     const hashToCompare = user ? user.password_hash : fakeHash;
-    const passwordMatch = await bcrypt.compare(password, hashToCompare); 
+    const passwordMatch = await bcrypt.compare(password ?? "", hashToCompare);
 
-      if (!user || !passwordMatch) {
-      return res.status(401).json({
-        message: "Ungültige E-Mail oder Passwort"
-      });
+    if (!user || !passwordMatch) {
+      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
     }
 
-      const { password_hash, ...safeUser } = user;
-        req.session.user = safeUser; 
-       if(rememberMe){
-        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; 
-        }else {
-        req.session.cookie.maxAge = null;}  
-    
+    // Deaktivierte Kunden können sich nicht einloggen (US81).
+    if (!user.is_active) {
+      return res.status(403).json({ message: "Dieses Konto wurde deaktiviert" });
+    }
+
+    const safeUser = userService.toPublicUser(user);
+    req.session.user = safeUser;
+
+    // "Login merken": persistentes Cookie (30 Tage), sonst Session-Cookie (US24).
+    req.session.cookie.maxAge = rememberMe ? 1000 * 60 * 60 * 24 * 30 : null;
+
     return res.status(200).json({ message: "Login erfolgreich", user: safeUser });
-    } catch (error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Fehler beim Login" });}
-
+    res.status(500).json({ message: "Fehler beim Login" });
+  }
 });
-
 
 app.post("/api/logout", (req, res) => {
   if (!req.session.user) {
     return res.status(200).json({ message: "Bereits ausgeloggt" });
   }
-
   req.session.destroy((err) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "Fehler beim Logout" });
     }
-
     res.clearCookie("connect.sid");
     return res.status(200).json({ message: "Logout erfolgreich" });
   });
 });
 
-app.get("/api/categories", async (req, res) => {
-  try{
-    const [rows] = await pool.query(
-      `SELECT id, name
-       FROM categories
-       WHERE is_active = 1
-       ORDER BY sort_order, name`
-    );
-    return res.status(200).json({ categories: rows });
-  } catch (error) {
-       return res.status(200).json({ categories: rows });
+app.get("/api/me", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ user: null });
   }
-   
+  return res.json({ user: req.session.user });
+});
+
+// ============================================================
+// Produkte & Kategorien
+// ============================================================
+
+app.get("/api/categories", async (req, res) => {
+  try {
+    const categories = await productService.findAllCategories();
+    return res.status(200).json({ categories });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Fehler beim Laden der Kategorien" });
+  }
 });
 
 app.get("/api/products", async (req, res) => {
   try {
     const { categoryId, search } = req.query;
-
-    let sql = `
-      SELECT id, category_id, name, image_url, price, rating
-      FROM products
-      WHERE is_active = 1
-    `;
-
-    const params = [];
-
-    if (categoryId) {
-      sql += " AND category_id = ?";
-      params.push(categoryId);
-    }
-
-    if (search) {
-      sql += " AND name LIKE ?";
-      params.push(`%${search}%`);
-    }
-
-    sql += " ORDER BY name";
-
-    const [rows] = await pool.query(sql, params);
-
-    return res.status(200).json({ products: rows });
+    const products = await productService.findProducts({ categoryId, search });
+    return res.status(200).json({ products });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: "Fehler beim Laden der Produkte",
-    });
+    return res.status(500).json({ message: "Fehler beim Laden der Produkte" });
   }
 });
 
+// ============================================================
+// Warenkorb (Session-basiert, US31–US35)
+// ============================================================
 
-
-
-app.get("/api/me", (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ user: null });
+app.get("/api/cart", async (req, res) => {
+  try {
+    return res.json(await cartService.getCartView(req.session));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden des Warenkorbs" });
   }
+});
 
-  return res.json({ user: req.session.user });
+app.post("/api/cart", async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    const product = await productService.findProductById(Number(productId));
+    if (!product || !product.is_active) {
+      return res.status(404).json({ message: "Produkt nicht gefunden" });
+    }
+    cartService.addToCart(req.session, Number(productId), Number(quantity) || 1);
+    return res.json(await cartService.getCartView(req.session));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Hinzufügen zum Warenkorb" });
+  }
+});
+
+app.put("/api/cart/:productId", async (req, res) => {
+  try {
+    cartService.setCartQuantity(req.session, Number(req.params.productId), Number(req.body.quantity));
+    return res.json(await cartService.getCartView(req.session));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Aktualisieren des Warenkorbs" });
+  }
+});
+
+app.delete("/api/cart/:productId", async (req, res) => {
+  try {
+    cartService.removeFromCart(req.session, Number(req.params.productId));
+    return res.json(await cartService.getCartView(req.session));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Entfernen aus dem Warenkorb" });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Backend läuft auf http://localhost:${PORT}`);
 });

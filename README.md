@@ -30,9 +30,22 @@ npm install
 npm run dev
 ```
 
-### 4. DB-Setup (XAMPP,MAMP) MySQL 
+### 4. DB-Setup (XAMPP,MAMP) MySQL
 
 -- Apache starten, und MySQL starten localhost/phpmyadmin aufrufen.
+
+**Schnellster Weg:** Den fertigen Dump `database/schema.sql` importieren – er legt die
+Datenbank `webshop` inkl. aller Tabellen und Beispieldaten neu an:
+
+```
+mysql -u root -p < database/schema.sql
+```
+
+Vorkonfigurierte Logins (Seed):
+- Admin:  `admin@nil.shop` / `Admin123!`
+- Kunde:  `kunde@nil.shop` / `Kunde123!`
+
+Alternativ können die folgenden Statements manuell ausgeführt werden:
 
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,6 +58,8 @@ CREATE TABLE users (
   email VARCHAR(150) UNIQUE NOT NULL,
   username VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  role TINYINT NOT NULL DEFAULT 0,        -- 0 = Customer, 2 = Admin
+  is_active BOOLEAN NOT NULL DEFAULT TRUE, -- vom Admin deaktivierbar
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,6 +75,7 @@ CREATE TABLE products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   category_id INT NOT NULL,
   name VARCHAR(100) NOT NULL,
+  description TEXT NULL,
   image_url VARCHAR(255),
   price DECIMAL(10, 2) NOT NULL,
   rating DECIMAL(2, 1) DEFAULT 0,

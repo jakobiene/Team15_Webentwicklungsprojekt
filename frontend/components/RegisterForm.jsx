@@ -2,8 +2,7 @@ import { useState } from "react";
 import { registerUser } from "../services/authService"; 
 
 function RegisterForm({ onSuccess }) {
-    const [formData, setFormData] = useState
-    ({ anrede: "",vorname: "",nachname: "",adresse: "",plz: "",port: "",email: "", username: "", password: "", confirmPassword: "",});
+    const [formData, setFormData] = useState({ anrede: "",vorname: "",nachname: "",adresse: "",plz: "",ort: "",email: "", username: "", password: "", confirmPassword: "",});
 
     
     const [error, setError] = useState("");
@@ -40,9 +39,9 @@ function RegisterForm({ onSuccess }) {
       await registerUser(formData); 
       setError(""); 
         onSuccess(); // Aufruf der onSuccess-Funktion, die als Prop übergeben wird, um anzuzeigen, dass die Registrierung erfolgreich war
-    } catch (err) {
+    } catch {
       setError("Registrierung fehlgeschlagen");
-    }   
+    }
   }
 
   return (
