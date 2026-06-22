@@ -3,7 +3,7 @@
 
 // Erfordert einen eingeloggten User (Customer oder Admin).
 export function requireAuth(req, res, next) {
-  if (!req.session?.user) { //defensives Coding für Edge Cases (besser)
+  if (!req.session?.user) {
     return res.status(401).json({ message: "Nicht angemeldet" });
   }
 
@@ -11,7 +11,7 @@ export function requireAuth(req, res, next) {
 }
 
 export function requireAdmin(req, res, next) {
-  if (!req.session?.user) { // same.> Defensiv.
+  if (!req.session?.user) {
     return res.status(401).json({ message: "Nicht angemeldet" });
   }
 
