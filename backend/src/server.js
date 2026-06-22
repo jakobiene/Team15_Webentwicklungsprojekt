@@ -10,7 +10,7 @@ import * as userService from "./services/userService.js";
 import * as productService from "./services/productService.js";
 import * as cartService from "./services/cartService.js";
 import * as orderService from "./services/orderService.js";
-import { requireAuth } from "./middleware/auth.js";
+import { requireAuth, requireAdmin } from "./middleware/auth.js";
 
 dotenv.config(); // lädt Umgebungsvariablen aus .env (z. B. PORT, DB-Zugang)
 
@@ -325,6 +325,144 @@ app.put("/api/account", requireAuth, async (req, res) => {
     }
     console.error(error);
     res.status(500).json({ message: "Fehler beim Aktualisieren der Daten" });
+  }
+});
+
+// ============================================================
+// Admin: Produktverwaltung (US70–US73) – nur für Administratoren
+// ============================================================
+
+// Alle Produkte inkl. inaktiver für die Verwaltung (US72).
+app.get("/api/admin/products", requireAdmin, async (req, res) => {
+  try {
+    const products = await productService.findProducts({ includeInactive: true });
+    return res.json({ products });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Produkte" });
+  }
+});
+
+// Pflichtfelder eines Produkts prüfen (US70).
+function validateProduct(body) {
+  const { categoryId, name, price } = body;
+  if (!categoryId) return "Kategorie ist erforderlich";
+  if (!name || !name.trim()) return "Name ist erforderlich";
+  if (price === undefined || price === null || isNaN(Number(price)) || Number(price) < 0) {
+    return "Gültiger Preis ist erforderlich";
+  }
+  return null;
+}
+
+// Produkt anlegen (US70/US71 – Foto via image_url).
+app.post("/api/admin/products", requireAdmin, async (req, res) => {
+  try {
+    const validationError = validateProduct(req.body);
+    if (validationError) return res.status(400).json({ message: validationError });
+
+    const { categoryId, name, description, imageUrl, price, rating } = req.body;
+    const product = await productService.createProduct({
+      categoryId, name, description, imageUrl, price, rating,
+    });
+    return res.status(201).json({ product });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Anlegen des Produkts" });
+  }
+});
+
+// Produkt bearbeiten (US72).
+app.put("/api/admin/products/:id", requireAdmin, async (req, res) => {
+  try {
+    const validationError = validateProduct(req.body);
+    if (validationError) return res.status(400).json({ message: validationError });
+
+    const { categoryId, name, description, imageUrl, price, rating } = req.body;
+    const product = await productService.updateProduct(Number(req.params.id), {
+      categoryId, name, description, imageUrl, price, rating,
+    });
+    if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });
+    return res.json({ product });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Bearbeiten des Produkts" });
+  }
+});
+
+// Produkt löschen (US73).
+app.delete("/api/admin/products/:id", requireAdmin, async (req, res) => {
+  try {
+    const deleted = await productService.deleteProduct(Number(req.params.id));
+    if (!deleted) return res.status(404).json({ message: "Produkt nicht gefunden" });
+    return res.json({ message: "Produkt gelöscht" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Löschen des Produkts" });
+  }
+});
+
+// ============================================================
+// Admin: Kundenverwaltung (US80–US82)
+// ============================================================
+
+// Alle Kunden auflisten (US80).
+app.get("/api/admin/customers", requireAdmin, async (req, res) => {
+  try {
+    const customers = await userService.findAllCustomers();
+    return res.json({ customers });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Kunden" });
+  }
+});
+
+// Bestellungen eines Kunden inkl. Detail-Einsicht (US80).
+app.get("/api/admin/customers/:id/orders", requireAdmin, async (req, res) => {
+  try {
+    const orders = await orderService.findOrdersByUser(Number(req.params.id));
+    return res.json({ orders });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Bestellungen" });
+  }
+});
+
+// Detail einer Bestellung inkl. Positionen (US80/US82, Admin – ohne User-Beschränkung).
+app.get("/api/admin/orders/:id", requireAdmin, async (req, res) => {
+  try {
+    const data = await orderService.findOrderById(Number(req.params.id));
+    if (!data) return res.status(404).json({ message: "Bestellung nicht gefunden" });
+    return res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Laden der Bestellung" });
+  }
+});
+
+// Kunde aktiv/inaktiv setzen (US81).
+app.put("/api/admin/customers/:id/active", requireAdmin, async (req, res) => {
+  try {
+    const ok = await userService.setCustomerActive(Number(req.params.id), Boolean(req.body.isActive));
+    if (!ok) return res.status(404).json({ message: "Kunde nicht gefunden" });
+    return res.json({ message: "Status aktualisiert" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Aktualisieren des Status" });
+  }
+});
+
+// Einzelne Bestellposition entfernen (US82).
+app.delete("/api/admin/orders/:orderId/items/:itemId", requireAdmin, async (req, res) => {
+  try {
+    const removed = await orderService.removeOrderItem(
+      Number(req.params.orderId),
+      Number(req.params.itemId)
+    );
+    if (!removed) return res.status(404).json({ message: "Position nicht gefunden" });
+    return res.json({ message: "Position entfernt" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Fehler beim Entfernen der Position" });
   }
 });
 
