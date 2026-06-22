@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Register from "../pages/Register";
 import RegisterSuccess from "../components/RegisterSuccess";
@@ -7,6 +7,9 @@ import Dashboard from "../pages/Dashboard";
 import Home from "../pages/Home";
 import Products from "../pages/Products";
 import Cart from "../pages/Cart";
+import Account from "../pages/Account";
+import OrderDetail from "../pages/OrderDetail";
+import InvoicePrint from "../pages/InvoicePrint";
 import ComingSoon from "../pages/ComingSoon";
 import Navbar from "../components/Navbar";
 import RequireRole from "../components/RequireRole";
@@ -15,15 +18,24 @@ import { fetchCart } from "../services/cartService";
 
 function App() {
   const [user, setUser] = useState(null); // aktuell angemeldeter Benutzer
+  const [authReady, setAuthReady] = useState(false); // true, sobald /api/me geprüft wurde
   const [cartCount, setCartCount] = useState(0); // Anzahl Produkte im Warenkorb (US32)
   const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auf der Druck-Rechnung wird keine Navbar angezeigt (eigenes Fenster, US65).
+  const hideNavbar = location.pathname.startsWith("/invoice/");
 
   // Beim Start: Login-Status (US21) und Warenkorb aus der Session wiederherstellen.
   useEffect(() => {
     async function init() {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } finally {
+        setAuthReady(true); // Auth-Prüfung abgeschlossen (auch bei Fehler)
+      }
       try {
         const cart = await fetchCart();
         setCartCount(cart.count);
@@ -52,7 +64,7 @@ function App() {
 
   return (
     <>
-      <Navbar role={navRole} onLogout={handleLogout} cartCount={cartCount} />
+      {!hideNavbar && <Navbar role={navRole} onLogout={handleLogout} cartCount={cartCount} />}
       {logoutError && <div className="alert alert-danger mb-0">{logoutError}</div>}
       <Routes>
         <Route path="/" element={<Home />} />
@@ -61,22 +73,30 @@ function App() {
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products onCartChange={setCartCount} />} />
-        <Route path="/cart" element={<Cart onCartChange={setCartCount} />} />
+        <Route path="/cart" element={<Cart user={user} onCartChange={setCartCount} />} />
 
-        {/* Bereiche aus Sprint 3 – Platzhalter, bis die echten Seiten existieren */}
+        {/* Konto & Bestellungen (Sprint 3) */}
         <Route
           path="/account"
           element={
-            <RequireRole user={user}>
-              <ComingSoon title="Mein Konto" />
+            <RequireRole user={user} ready={authReady}>
+              <Account user={user} onUserUpdate={setUser} />
             </RequireRole>
           }
         />
         <Route
-          path="/orders"
+          path="/orders/:id"
           element={
-            <RequireRole user={user}>
-              <ComingSoon title="Meine Bestellungen" />
+            <RequireRole user={user} ready={authReady}>
+              <OrderDetail />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/invoice/:id"
+          element={
+            <RequireRole user={user} ready={authReady}>
+              <InvoicePrint />
             </RequireRole>
           }
         />
@@ -85,7 +105,7 @@ function App() {
         <Route
           path="/admin/products"
           element={
-            <RequireRole user={user} adminOnly>
+            <RequireRole user={user} ready={authReady} adminOnly>
               <ComingSoon title="Produkte bearbeiten" />
             </RequireRole>
           }
@@ -93,7 +113,7 @@ function App() {
         <Route
           path="/admin/customers"
           element={
-            <RequireRole user={user} adminOnly>
+            <RequireRole user={user} ready={authReady} adminOnly>
               <ComingSoon title="Kunden bearbeiten" />
             </RequireRole>
           }

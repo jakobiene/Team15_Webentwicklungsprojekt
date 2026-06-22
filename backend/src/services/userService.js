@@ -36,6 +36,19 @@ export async function findPublicUserById(id) {
   return rows[0] ?? null;
 }
 
+// Aktualisiert die Stammdaten eines Users (US61). Gibt den aktualisierten
+// öffentlichen Datensatz (ohne Hash) zurück.
+export async function updateStammdaten(id, data) {
+  const { anrede, vorname, nachname, adresse, plz, ort, email } = data;
+  await pool.query(
+    `UPDATE users
+     SET anrede = ?, vorname = ?, nachname = ?, adresse = ?, plz = ?, ort = ?, email = ?
+     WHERE id = ?`,
+    [anrede, vorname, nachname, adresse, plz, ort, email, id]
+  );
+  return findPublicUserById(id);
+}
+
 // Entfernt den Hash aus einem vollständigen User-Objekt (für die Session).
 export function toPublicUser(user) {
   if (!user) return null;

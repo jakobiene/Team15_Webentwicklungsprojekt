@@ -61,7 +61,7 @@ CREATE TABLE products (
 CREATE TABLE orders (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   user_id        INT NOT NULL,
-  invoice_number VARCHAR(40)   NOT NULL UNIQUE,
+  invoice_number VARCHAR(40)   UNIQUE,        -- wird direkt nach dem Insert gesetzt (RE-<Jahr>-<id>)
   total          DECIMAL(10,2) NOT NULL DEFAULT 0,
   created_at     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
