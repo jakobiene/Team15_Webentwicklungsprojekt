@@ -1,418 +1,126 @@
-## Projekt
-Webshop als Fullstack-Anwendung mit React (Frontend), Node.js/Express (Backend) und MySQL.
+# Nil – Webshop (Team 15)
 
-## Projekt
-Webshop als Fullstack-Anwendung mit React (Frontend), Node.js/Express (Backend) und MySQL.
+Fullstack-Webshop (Branche: **Sport & Fitness**) mit **React** (Frontend),
+**Node.js/Express** (Backend) und **MySQL**.
 
+## Tech-Stack
+- **Frontend:** React + Vite, Bootstrap — läuft auf Port **5173**
+- **Backend:** Node.js + Express (REST-API) — läuft auf Port **5000**
+- **Datenbank:** MySQL/MariaDB (z. B. via XAMPP) — Port **3306**
+- **Datenaustausch:** JSON über HTTP
+
+## Voraussetzungen
+- Node.js (inkl. npm)
+- MySQL/MariaDB (z. B. über XAMPP)
+
+---
 
 ## Setup
+
 ### 1. Repository klonen
 ```
 git clone <repo-url>
-cd team15_webshop
+cd Team15_Webentwicklungsprojekt
 ```
 
-### How to Install and start with React/Express:
-
-
-
-### 2. Frontend starten
+### 2. Datenbank einrichten
+MySQL starten (z. B. in XAMPP → **MySQL Start**). Dann den fertigen Dump importieren –
+er legt die Datenbank `webshop` inkl. aller Tabellen und Beispieldaten neu an:
 ```
-cd frontend
-npm install
-npm run dev
+mysql -u root < database/schema.sql
 ```
+> Der Dump enthält **alles**: Tabellen (`users`, `categories`, `products`, `orders`,
+> `order_items`) sowie Seed-Daten (Kategorien, Produkte, Admin- und Test-Kunde).
+> Ein manuelles Anlegen ist nicht nötig.
 
-### 3. Backend starten
+**Vorkonfigurierte Logins:**
+- Admin: `admin@nil.shop` / `Admin123!`
+- Kunde: `kunde@nil.shop` / `Kunde123!`
+
+### 3. Backend konfigurieren & starten
+Datei `backend/.env` anlegen:
+```
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=webshop
+SESSION_SECRET=dev-secret
+```
+> Standard bei XAMPP ist der MySQL-User `root` mit **leerem** Passwort. Falls euer
+> MySQL anders konfiguriert ist, Werte entsprechend anpassen.
+
+Dann:
 ```
 cd backend
 npm install
-npm run dev
+npm run dev        # http://localhost:5000
 ```
 
-### 4. DB-Setup (XAMPP,MAMP) MySQL
-
--- Apache starten, und MySQL starten localhost/phpmyadmin aufrufen.
-
-**Schnellster Weg:** Den fertigen Dump `database/schema.sql` importieren – er legt die
-Datenbank `webshop` inkl. aller Tabellen und Beispieldaten neu an:
-
+### 4. Frontend starten
 ```
-mysql -u root -p < database/schema.sql
+cd frontend
+npm install
+npm run dev        # http://localhost:5173
 ```
+Anschließend **http://localhost:5173** im Browser öffnen.
 
-Vorkonfigurierte Logins (Seed):
-- Admin:  `admin@nil.shop` / `Admin123!`
-- Kunde:  `kunde@nil.shop` / `Kunde123!`
+### Hinweis zu Produktbildern
+Produktfotos werden im Backend unter `backend/uploads/` gespeichert und unter
+`http://localhost:5000/uploads/...` ausgeliefert. Die Seed-Bilder liegen bereits im Repo.
+Das **Backend muss laufen**, damit die Bilder angezeigt werden.
 
-Alternativ können die folgenden Statements manuell ausgeführt werden:
+---
 
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  anrede VARCHAR(20),
-  vorname VARCHAR(100),
-  nachname VARCHAR(100),
-  adresse VARCHAR(255),
-  plz VARCHAR(20),
-  ort VARCHAR(100),
-  email VARCHAR(150) UNIQUE NOT NULL,
-  username VARCHAR(100) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role TINYINT NOT NULL DEFAULT 0,        -- 0 = Customer, 2 = Admin
-  is_active BOOLEAN NOT NULL DEFAULT TRUE, -- vom Admin deaktivierbar
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
-CREATE TABLE categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  sort_order INT NOT NULL DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE products (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  category_id INT NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  description TEXT NULL,
-  image_url VARCHAR(255),
-  price DECIMAL(10, 2) NOT NULL,
-  rating DECIMAL(2, 1) DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-  FOREIGN KEY (category_id) REFERENCES categories(id)
-);
-
-
-### 4.1 DB-Kategorien (Insert)
-- Kategorien
-
-INSERT INTO categories (name, sort_order, is_active)
-VALUES
-  ('Bücher', 1, TRUE),
-  ('Elektronik', 2, TRUE),
-  ('Haushalt', 3, TRUE),
-  ('Fitness', 4, TRUE);
-
-
-### 4.2 DB-Produkte (Insert)
-- Produkte
-
-INSERT INTO products (category_id, name, image_url, price, rating, is_active)
-VALUES
-  -- Bücher
-  (1, 'Designing Data-Intensive Applications', 'https://placehold.co/600x400?text=DDIA', 49.99, 4.9, TRUE),
-  (1, 'Clean Architecture', 'https://placehold.co/600x400?text=Clean+Architecture', 39.99, 4.7, TRUE),
-  (1, 'The Pragmatic Programmer', 'https://placehold.co/600x400?text=Pragmatic+Programmer', 34.99, 4.8, TRUE),
-  (1, 'Refactoring UI', 'https://placehold.co/600x400?text=Refactoring+UI', 79.99, 4.6, TRUE),
-
-  -- Elektronik
-  (2, 'Apple iPhone 15', 'https://placehold.co/600x400?text=iPhone+15', 849.00, 4.7, TRUE),
-  (2, 'Apple MacBook Air M3', 'https://placehold.co/600x400?text=MacBook+Air+M3', 1299.00, 4.8, TRUE),
-  (2, 'Apple AirPods Pro', 'https://placehold.co/600x400?text=AirPods+Pro', 249.00, 4.6, TRUE),
-  (2, 'Apple Watch Series 9', 'https://placehold.co/600x400?text=Apple+Watch', 449.00, 4.5, TRUE),
-
-  -- Haushalt
-  (3, 'Kaffeemaschine', 'https://placehold.co/600x400?text=Kaffeemaschine', 89.99, 4.4, TRUE),
-  (3, 'LED Schreibtischlampe', 'https://placehold.co/600x400?text=Lampe', 34.99, 4.2, TRUE),
-  (3, 'Kabelloser Staubsauger', 'https://placehold.co/600x400?text=Staubsauger', 179.99, 4.3, TRUE),
-  (3, 'Wasserkocher Edelstahl', 'https://placehold.co/600x400?text=Wasserkocher', 29.99, 4.1, TRUE),
-
-  -- Fitness
-  (4, 'Whey Protein Vanille', 'https://placehold.co/600x400?text=Whey+Protein', 29.99, 4.5, TRUE),
-  (4, 'Creatine Monohydrate', 'https://placehold.co/600x400?text=Creatine', 19.99, 4.7, TRUE),
-  (4, 'Protein Pulver Schokolade', 'https://placehold.co/600x400?text=Protein+Schoko', 31.99, 4.4, TRUE),
-  (4, 'Shaker 700ml', 'https://placehold.co/600x400?text=Shaker', 9.99, 4.2, TRUE);
-
-
-
-### 4.3 ENV Setup /backend/.env   (Backend-DB Zugriffs Admin)
-- PORT=5000
-- DB_HOST=localhost
-- DB_USER=webadmin
-- DB_PASSWORD=M993headEyes$!
-- DB_NAME=webshop
-
-
-### 5. Auth Flow bei Registrierung
-
-```md
-## 🔄 Auth Flow
-
-```txt
-[User]
-   ↓
-[React Frontend]
-   ↓  POST /api/register
-[Express Backend]
-   ↓
-[Password Hashing (bcrypt)]
-   ↓
-[MySQL Database]
-   ↓
-[Response → Frontend]
-
+## Projektstruktur (Kurzüberblick)
 ```
-## 6. Allgemeine Doku (dump)
-
-Flow:
-1. User öffnet Seite
-2. Frontend fragt Backend: /api/me
-3. Backend schaut: Gibt es gültige Session/Cookie?
-4. Wenn ja: user zurückgeben
-5. Wenn nein: user null / 401
-6. App.jsx speichert user im State
-7. Navbar entscheidet anhand user.role
-
-Beim Login
-LoginForm
--> POST /api/login mit email, password, rememberMe
--> Backend prüft Passwort
--> Backend setzt Session/Cookie
--> Backend gibt user zurück
--> App.jsx speichert user
--> Navbar ändert sich sofort
-
-* Das ist der wichtigste Punkt: React-State überlebt keinen Seitenreload. Cookie schon. Deshalb brauchst du /api/me:
-
-App.jsx hält den User-State, weil React irgendwo zentral wissen muss, wer gerade eingeloggt ist. Aber: Dieser State lebt nur im Browser-Speicher der laufenden React-App.
-
-
-F5 / Reload passiert folgendes:
--> React-App startet komplett neu
--> useState(null) ist wieder null
--> Navbar würde wieder Gast anzeigen
-
-Darum benötigt AppJSX checks:
-
-App startet
--> getCurrentUser()
--> GET /api/me
--> Backend schaut in Cookie/Session
--> gibt User zurück
--> App setzt setUser(user)
--> Navbar zeigt passende Rolle
-
-## Technischer Ablauf 
-Klar, hier ist eine README-taugliche Version:
-
-```md
-## Login-State, Sessions und Navbar-Rollen
-
-Die React-App verwaltet den aktuell eingeloggten Benutzer zentral in `App.jsx`.
-
-Dafür wird ein `user`-State verwendet:
-
-```jsx
-const [user, setUser] = useState(null);
-const role = user?.role ?? 0;
+frontend/                React-App
+  pages/                 Seiten (eine je Route)
+  components/            wiederverwendbare UI-Bausteine
+  services/              API-Aufrufe (fetch) ans Backend
+  src/App.jsx            Routing + globaler State (user, Warenkorb-Anzahl)
+backend/
+  src/server.js          alle API-Endpoints (Routing, enthält kein SQL)
+  src/services/          zentrale DB-Service-Schicht (gesamtes SQL)
+  src/middleware/auth.js Zugriffsschutz: requireAuth / requireAdmin
+  database/db.js         MySQL-Verbindungspool
+  uploads/               hochgeladene Produktbilder
+database/schema.sql      MySQL-Dump (Tabellen + Seed-Daten)
 ```
 
-Wenn kein Benutzer eingeloggt ist, ist `user` gleich `null`. Dadurch wird automatisch die Rolle `0` verwendet. Diese Rolle steht für Gäste.
+---
 
-Die Rollen sind:
+## Architektur & Auth (Kurzüberblick)
 
-```txt
-0 = Gast
-1 = eingeloggter Benutzer
-2 = Administrator
-```
+### Trennung Frontend / Backend
+Frontend (:5173) und Backend (:5000) sind getrennt und tauschen nur **JSON** über HTTP aus.
+Das Backend ist der **einzige** Zugang zur Datenbank: das gesamte SQL liegt in der
+Service-Schicht (`backend/src/services/`); die Endpoints in `server.js` enthalten kein SQL.
 
-Die Rolle wird an die Navbar weitergegeben:
+### Login, Sessions & Cookies
+- Passwörter werden mit **bcrypt** gehasht gespeichert (nie im Klartext).
+- Beim Login legt das Backend den User in der **Session** ab (`req.session.user`) und setzt
+  ein **Cookie** (`connect.sid`). Das Cookie enthält nur die Session-ID; die Daten liegen
+  serverseitig im Session-Store.
+- **„Login merken":** Häkchen gesetzt → persistentes Cookie (30 Tage), sonst Session-Cookie
+  (wird beim Schließen des Browsers gelöscht).
+- Frontend-Requests senden `credentials: "include"`, damit das Cookie mitgeschickt wird.
 
-```jsx
-<Navbar role={role} />
-```
+### Login-Status nach Reload
+React-State geht beim Reload verloren. Beim App-Start ruft `App.jsx` (in `useEffect`)
+`GET /api/me` auf; das Backend liest die Session über das Cookie und gibt den User zurück →
+der Login-Status wird wiederhergestellt.
 
-Die Navbar entscheidet anhand dieser Rolle, welche Links angezeigt werden.
+### Rollenbasierte Navigation
+- DB-Rolle (`users.role`): **0 = Kunde**, **2 = Admin**.
+- `App.jsx` bildet daraus die Navbar-Rolle ab: nicht eingeloggt → Gast, `role === 2` → Admin,
+  sonst → Kunde.
+- Je Rolle zeigt die Navbar ein anderes Menü:
+  - **Gast:** Home, Produkte, Warenkorb, Anmelden, Registrieren
+  - **Kunde:** Home, Produkte, Mein Konto, Warenkorb
+  - **Admin:** Home, Produkte bearbeiten, Kunden bearbeiten
+- Die echte Absicherung erfolgt im Backend über `requireAuth` / `requireAdmin` — das
+  Ausblenden von Menüpunkten ist nur UX.
 
-Gäste sehen:
-
-```txt
-Home
-Produkte
-Warenkorb
-```
-
-Eingeloggte Benutzer sehen:
-
-```txt
-Home
-Produkte
-Mein Konto
-Warenkorb
-```
-
-Administratoren sehen:
-
-```txt
-Home
-Produkte bearbeiten
-Kunden bearbeiten
-Gutscheine verwalten
-```
-
-## Warum der User-State in App.jsx liegt
-
-Der User-State wird in `App.jsx` gespeichert, weil mehrere Bereiche der App wissen müssen, welcher Benutzer aktuell angemeldet ist. Zum Beispiel:
-
-- die Navbar
-- geschützte Seiten
-- der Login-Prozess
-- später der Logout-Prozess
-
-`App.jsx` ist dafür geeignet, weil es die zentrale Komponente ist, in der auch das Routing definiert wird.
-
-Wenn sich der User ändert, rendert React die App neu. Dadurch bekommt auch die Navbar automatisch die neue Rolle und zeigt die passenden Navigationspunkte an.
-
-## Warum getCurrentUser benötigt wird
-
-React-State geht bei einem Seiten-Reload verloren. Wenn der Browser neu lädt, startet die React-App komplett neu und der State ist wieder leer:
-
-```txt
-user = null
-role = 0
-```
-
-Dadurch würde die Navbar zunächst wieder die Gast-Ansicht anzeigen.
-
-Damit ein bereits eingeloggter Benutzer nach einem Reload weiterhin erkannt wird, ruft die App beim Start das Backend auf:
-
-```txt
-GET /api/me
-```
-
-Das Backend prüft anhand der Session bzw. des Cookies, ob der Browser bereits eingeloggt ist. Wenn eine gültige Session existiert, gibt das Backend den aktuellen Benutzer zurück.
-
-## useEffect in App.jsx
-
-Der Aufruf von `/api/me` wird in `useEffect` ausgeführt:
-
-```jsx
-useEffect(() => {
-  async function loadUser() {
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-  }
-
-  loadUser();
-}, []);
-```
-
-`useEffect` wird verwendet, um Code nach dem ersten Rendern der Komponente auszuführen. In diesem Fall soll beim Start der App einmal geprüft werden, ob bereits ein Benutzer eingeloggt ist.
-
-Die Funktion `loadUser` ist `async`, weil `getCurrentUser()` einen HTTP-Request an das Backend sendet.
-
-```jsx
-const currentUser = await getCurrentUser();
-```
-
-Wenn das Backend einen Benutzer zurückgibt, wird dieser im State gespeichert:
-
-```jsx
-setUser(currentUser);
-```
-
-Dadurch rendert React die App neu. Die Rolle wird neu berechnet und an die Navbar weitergegeben.
-
-Das leere Array am Ende sorgt dafür, dass der Effekt nur einmal beim Start der App ausgeführt wird:
-
-```jsx
-}, []);
-```
-
-Ohne dieses Array würde der Effekt nach jedem Rendern erneut laufen.
-
-## Login-Ablauf
-
-Beim Login sendet `LoginForm` die eingegebenen Daten an das Backend:
-
-```jsx
-const data = await loginUser(formData);
-onSuccess(data);
-```
-
-`formData` enthält:
-
-```js
-{
-  email,
-  password,
-  rememberMe
-}
-```
-
-Das Backend prüft die Login-Daten. Wenn der Login erfolgreich ist, gibt es den Benutzer zurück.
-
-Danach wird der Benutzer in `App.jsx` gespeichert:
-
-```jsx
-<Login onLogin={setUser} />
-```
-
-In `Login.jsx` wird nach erfolgreichem Login `onLogin(data.user)` aufgerufen. Dadurch wird der User-State in `App.jsx` aktualisiert.
-
-Anschließend wird der Benutzer weitergeleitet, zum Beispiel zur Startseite oder zum Dashboard.
-
-## Cookie und Session
-
-Die Checkbox „Login merken“ wird mit an das Backend gesendet. Das Backend entscheidet dann, ob ein normales Session-Cookie oder ein länger gültiges Cookie gesetzt wird.
-
-Wichtig ist:
-
-- Das Frontend speichert den Login nicht dauerhaft selbst.
-- Das Backend verwaltet die Session.
-- Das Frontend fragt über `/api/me`, ob eine gültige Session existiert.
-- Cookies müssen bei Requests mitgeschickt werden.
-
-Dafür muss im Frontend bei Fetch-Requests verwendet werden:
-
-```js
-credentials: "include"
-```
-
-Beispiel:
-
-```js
-export async function getCurrentUser() {
-  const response = await fetch("http://localhost:5000/api/me", {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const data = await response.json();
-  return data.user;
-}
-```
-
-## Zusammenfassung
-
-Der Login-Zustand wird während der laufenden App in `App.jsx` gespeichert. Nach einem Reload wird dieser Zustand über `/api/me` aus der Backend-Session wiederhergestellt.
-
-Die Navbar bekommt nur die aktuelle Rolle und entscheidet anhand dieser Rolle, welche Menüpunkte sichtbar sind.
-
-```txt
-Login erfolgreich
--> Backend gibt User zurück
--> App.jsx speichert User
--> Rolle wird berechnet
--> Navbar zeigt passende Links
-```
-
-Bei einem Reload:
-
-```txt
-App startet neu
--> user ist zunächst null
--> App ruft /api/me auf
--> Backend prüft Cookie/Session
--> User wird wieder gesetzt
--> Navbar zeigt passende Rolle
-```
-```
+> Detaillierte Code-Doku zum Login (Security: SQL-Injection, User Enumeration, Timing Attacks)
+> siehe `backend/README.md`.

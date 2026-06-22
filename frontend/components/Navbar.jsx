@@ -5,8 +5,8 @@ const navItemsByRole = {
     { label: "Home", path: "/" },
     { label: "Produkte", path: "/products" },
     { label: "Warenkorb", path: "/cart" },
-    { label:  "Login", path : "/login" },
-    { label:  "Sign Up", path: "/register" }
+    { label: "Anmelden", path: "/login" },
+    { label: "Registrieren", path: "/register" }
   ],
   1: [
     { label: "Home", path: "/" },

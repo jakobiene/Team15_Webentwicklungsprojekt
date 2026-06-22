@@ -31,7 +31,7 @@ function OrderDetail() {
 
   return (
     <main className="container py-5">
-      <Link to="/account" className="btn btn-link px-0 mb-3">← Zurück zu Mein Konto</Link>
+      <Link to="/account" className="btn btn-link text-dark px-0 mb-3">← Zurück zu Mein Konto</Link>
       <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
         <div>
           <h1 className="fw-bold mb-1">Bestellung {order.invoice_number}</h1>

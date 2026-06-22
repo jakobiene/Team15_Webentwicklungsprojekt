@@ -39,14 +39,14 @@ function RegisterForm({ onSuccess }) {
       await registerUser(formData); 
       setError(""); 
         onSuccess(); // Aufruf der onSuccess-Funktion, die als Prop übergeben wird, um anzuzeigen, dass die Registrierung erfolgreich war
-    } catch {
-      setError("Registrierung fehlgeschlagen");
+    } catch (err) {
+      setError(err.message); // konkrete Backend-Meldung anzeigen
     }
   }
 
   return (
     <>
-      <h2 className="fw-bold mb-1 text-primary">Registrieren</h2>
+      <h2 className="fw-bold mb-1 text-dark">Registrieren</h2>
       <p className="text-muted mb-4">Bitte gib deine Daten ein.</p>
 
       {error && (

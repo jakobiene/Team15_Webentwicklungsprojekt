@@ -19,9 +19,12 @@ export async function createUser(data) {
   return result.insertId;
 }
 
-// Voller Datensatz inkl. password_hash – nur für Login/Passwortprüfung verwenden.
-export async function findUserByEmailWithHash(email) {
-  const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+// Voller Datensatz inkl. password_hash – Login per E-Mail ODER Benutzername (US20).
+export async function findUserByLoginWithHash(login) {
+  const [rows] = await pool.query(
+    "SELECT * FROM users WHERE email = ? OR username = ?",
+    [login, login]
+  );
   return rows[0] ?? null;
 }
 

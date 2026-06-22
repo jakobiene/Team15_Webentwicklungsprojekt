@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt"; // PW-Hashing
 import validator from "validator"; // E-Mail-Validierung
 import session from "express-session"; // Session-Management
+import multer from "multer"; // Datei-Upload (Produktfotos, US71)
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 // Zentrale DB-Service-Klassen – die Endpoints enthalten selbst kein SQL (US01/US03).
 import * as userService from "./services/userService.js";
@@ -38,6 +42,31 @@ app.use(
     },
   })
 );
+
+// ----------------------------------------------------------------
+// Datei-Upload für Produktfotos (US71)
+// Bilder werden auf der Platte unter backend/uploads/ gespeichert und
+// statisch unter /uploads ausgeliefert.
+// ----------------------------------------------------------------
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadDir = path.join(__dirname, "..", "uploads");
+fs.mkdirSync(uploadDir, { recursive: true }); // Ordner sicherstellen
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  // eindeutiger Dateiname, Original-Endung beibehalten
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // max. 2 MB
+  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")), // nur Bilder
+});
+
+// Hochgeladene Bilder öffentlich abrufbar machen
+app.use("/uploads", express.static(uploadDir));
 
 // ============================================================
 // Hilfsfunktionen: Validierung
@@ -101,18 +130,19 @@ const fakeHash = await bcrypt.hash("fakepassword", 10);
 
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body;
+    const { login, password, rememberMe } = req.body;
 
-    if (!validateEmail(email)) {
-      return res.status(400).json({ message: "Ungültige E-Mail" });
+    if (!login || !password) {
+      return res.status(400).json({ message: "Bitte Benutzername/E-Mail und Passwort angeben" });
     }
 
-    const user = await userService.findUserByEmailWithHash(email);
+    // Login per E-Mail ODER Benutzername (US20)
+    const user = await userService.findUserByLoginWithHash(login);
     const hashToCompare = user ? user.password_hash : fakeHash;
     const passwordMatch = await bcrypt.compare(password ?? "", hashToCompare);
 
     if (!user || !passwordMatch) {
-      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+      return res.status(401).json({ message: "Ungültige Zugangsdaten" });
     }
 
     // Deaktivierte Kunden können sich nicht einloggen (US81).
@@ -148,10 +178,9 @@ app.post("/api/logout", (req, res) => {
 });
 
 app.get("/api/me", (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ user: null });
-  }
-  return res.json({ user: req.session.user });
+  // Immer 200: Gäste erhalten user=null. So entsteht beim Seitenstart kein
+  // (harmloser, aber verwirrender) 401-Eintrag in der Browser-Konsole.
+  return res.status(200).json({ user: req.session.user ?? null });
 });
 
 // ============================================================
@@ -354,15 +383,20 @@ function validateProduct(body) {
   return null;
 }
 
-// Produkt anlegen (US70/US71 – Foto via image_url).
-app.post("/api/admin/products", requireAdmin, async (req, res) => {
+// URL der hochgeladenen Datei, oder null wenn keine Datei dabei war (US71).
+function uploadedImageUrl(req) {
+  return req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
+}
+
+// Produkt anlegen (US70/US71). Das Foto wird als Datei hochgeladen.
+app.post("/api/admin/products", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
     if (validationError) return res.status(400).json({ message: validationError });
 
-    const { categoryId, name, description, imageUrl, price, rating } = req.body;
+    const { categoryId, name, description, price, rating } = req.body;
     const product = await productService.createProduct({
-      categoryId, name, description, imageUrl, price, rating,
+      categoryId, name, description, imageUrl: uploadedImageUrl(req), price, rating,
     });
     return res.status(201).json({ product });
   } catch (error) {
@@ -371,14 +405,22 @@ app.post("/api/admin/products", requireAdmin, async (req, res) => {
   }
 });
 
-// Produkt bearbeiten (US72).
-app.put("/api/admin/products/:id", requireAdmin, async (req, res) => {
+// Produkt bearbeiten (US72). Ohne neu hochgeladenes Foto bleibt das bestehende Bild erhalten.
+app.put("/api/admin/products/:id", requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const validationError = validateProduct(req.body);
     if (validationError) return res.status(400).json({ message: validationError });
 
-    const { categoryId, name, description, imageUrl, price, rating } = req.body;
-    const product = await productService.updateProduct(Number(req.params.id), {
+    const id = Number(req.params.id);
+    let imageUrl = uploadedImageUrl(req);
+    if (!imageUrl) {
+      // Kein neues Foto -> vorhandenes Bild beibehalten
+      const existing = await productService.findProductById(id);
+      imageUrl = existing?.image_url ?? null;
+    }
+
+    const { categoryId, name, description, price, rating } = req.body;
+    const product = await productService.updateProduct(id, {
       categoryId, name, description, imageUrl, price, rating,
     });
     if (!product) return res.status(404).json({ message: "Produkt nicht gefunden" });

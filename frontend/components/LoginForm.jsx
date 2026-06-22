@@ -2,7 +2,7 @@ import { useState } from "react";
 import { loginUser } from "../services/authService";
 
 function LoginForm({ onSuccess }) {
-  const [formData, setFormData] = useState({email: "",password: "", rememberMe: false,});
+  const [formData, setFormData] = useState({login: "",password: "", rememberMe: false,});
   const [error, setError] = useState("");
 
   function handleChange(e) {
@@ -26,15 +26,15 @@ function LoginForm({ onSuccess }) {
 
   return (
     <>
-      <h2 className="fw-bold mb-1 text-primary">Anmelden</h2>
+      <h2 className="fw-bold mb-1 text-dark">Anmelden</h2>
       <p className="text-muted mb-4">Bitte gib deine Zugangsdaten ein.</p>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label">E-Mail</label>
-          <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange}required/></div>
+          <label className="form-label">Benutzername oder E-Mail</label>
+          <input type="text" className="form-control" name="login" value={formData.login} onChange={handleChange}required/></div>
 
          <div className="mb-3">
           <label className="form-label">Passwort</label>

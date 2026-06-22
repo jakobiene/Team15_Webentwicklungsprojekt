@@ -4,7 +4,6 @@ import Register from "../pages/Register";
 import RegisterSuccess from "../components/RegisterSuccess";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
-import Home from "../pages/Home";
 import Products from "../pages/Products";
 import Cart from "../pages/Cart";
 import Account from "../pages/Account";
@@ -68,7 +67,8 @@ function App() {
       {!hideNavbar && <Navbar role={navRole} onLogout={handleLogout} cartCount={cartCount} />}
       {logoutError && <div className="alert alert-danger mb-0">{logoutError}</div>}
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* Startpunkt ist die Produktseite; "Home" im Menü führt hierher */}
+        <Route path="/" element={<Products onCartChange={setCartCount} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register/success" element={<RegisterSuccess />} />
         <Route path="/login" element={<Login onLogin={setUser} />} />

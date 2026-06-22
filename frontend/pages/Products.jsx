@@ -18,7 +18,7 @@ function Products({ onCartChange }) {
         const loadedCategories = data.categories || [];
 
         setCategories(loadedCategories);
-        setSelectedCategoryId(loadedCategories[0]?.id ?? null);
+        setSelectedCategoryId(null); // Standard: Filter "Alle" (alle Kategorien anzeigen)
         setError("");
       } catch {
         setError("Kategorien konnten nicht geladen werden.");
@@ -70,9 +70,6 @@ function Products({ onCartChange }) {
     <main className="bg-light min-vh-100">
       <div className="container py-5">
         <header className="mb-4">
-          <p className="text-uppercase text-primary fw-semibold mb-2">
-            Sortiment
-          </p>
           <h1 className="display-6 fw-bold text-dark mb-2">Produkte</h1>
           <p className="text-secondary fs-5 mb-0">
             Wähle eine Kategorie und entdecke passende Produkte.
@@ -98,7 +95,7 @@ function Products({ onCartChange }) {
         <div className="d-flex flex-wrap gap-2 mb-4">
           <button
             className={`btn ${
-              selectedCategoryId === null ? "btn-dark" : "btn-outline-dark"
+              selectedCategoryId === null ? "btn-dark" : "btn-outline-dark" // das hier ist der Alle-Button, wird === null
             }`}
             onClick={() => setSelectedCategoryId(null)}
           >
